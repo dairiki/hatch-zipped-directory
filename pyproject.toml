@@ -1,0 +1,72 @@
+[project]
+name = "hatch-inkscape-extension"
+description = 'A custom builder to build zipped Inkscape extension directories'
+readme = "README.md"
+requires-python = ">=3.7"
+license = "MIT"
+keywords = []
+authors = [
+  { name = "Jeff Dairiki", email = "dairiki@dairiki.org" },
+]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Environment :: Plugins",
+  "Framework :: Hatch",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.7",
+  "Programming Language :: Python :: 3.8",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: Implementation :: CPython",
+  "Topic :: System :: Archiving :: Packaging",
+]
+dependencies = []
+dynamic = ["version"]
+
+[project.urls]
+Homepage = "https://github.com/dairiki/hatch-inkscape-extension"
+
+[project.entry-points.hatch]
+inkscape-extension = "hatch_inkscape_extension.hooks"
+
+[build-system]
+requires = ["hatchling", "hatch-vcs"]
+build-backend = "hatchling.build"
+
+[tool.hatch.version]
+source = "vcs"
+
+[tool.hatch.envs.default]
+dependencies = [
+  "pytest",
+  "pytest-cov",
+
+  "flake8",
+  "flake8-bugbear",
+  "mypy",
+  "hatchling",
+]
+[tool.hatch.envs.default.scripts]
+cov = "pytest --cov-report=term-missing --cov-config=pyproject.toml --cov=hatch_inkscape_extension --cov=tests"
+no-cov = "cov --no-cov"
+
+[[tool.hatch.envs.test.matrix]]
+python = ["37", "38", "39", "310", "311"]
+
+[tool.coverage.run]
+branch = true
+parallel = true
+omit = [
+  "hatch_inkscape_extension/__about__.py",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+  "no cov",
+  "if __name__ == .__main__.:",
+  "if TYPE_CHECKING:",
+]
