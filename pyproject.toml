@@ -1,6 +1,6 @@
 [project]
-name = "hatch-inkscape-extension"
-description = 'A custom builder to build zipped Inkscape extension directories'
+name = "hatch-zipped-directory"
+description = 'A custom builder to build zipped directories'
 readme = "README.md"
 requires-python = ">=3.7"
 license = "MIT"
@@ -30,10 +30,10 @@ dependencies = [
 dynamic = ["version"]
 
 [project.urls]
-Homepage = "https://github.com/dairiki/hatch-inkscape-extension"
+Homepage = "https://github.com/dairiki/hatch-zipped-directory"
 
 [project.entry-points.hatch]
-inkscape-extension = "hatch_inkscape_extension.hooks"
+zipped-directory = "hatch_zipped_directory.hooks"
 
 [build-system]
 requires = ["hatchling", "hatch-vcs"]
@@ -54,7 +54,7 @@ extra-dependencies = [
 ]
 
 [tool.hatch.envs.default.scripts]
-cov = "pytest --cov-report=term-missing --cov-config=pyproject.toml --cov=hatch_inkscape_extension --cov=tests"
+cov = "pytest --cov-report=term-missing --cov-config=pyproject.toml --cov=hatch_zipped_directory --cov=tests"
 no-cov = "cov --no-cov"
 full = "hatch run test:cov"
 
@@ -66,9 +66,6 @@ python = ["37", "38", "39", "310", "311"]
 [tool.coverage.run]
 branch = true
 parallel = true
-omit = [
-  "hatch_inkscape_extension/__about__.py",
-]
 
 [tool.coverage.report]
 exclude_lines = [

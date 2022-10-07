@@ -7,8 +7,8 @@ from hatchling.builders.plugin.interface import IncludedFile
 from hatchling.metadata.core import ProjectMetadata
 import pytest
 
-from hatch_inkscape_extension.builder import InkscapeExtensionBuilder
-from hatch_inkscape_extension.builder import ZipArchive
+from hatch_zipped_directory.builder import ZipArchive
+from hatch_zipped_directory.builder import ZippedDirectoryBuilder
 
 
 def zip_contents(path):
@@ -21,7 +21,7 @@ def zip_contents(path):
 
 
 def test_ZipArchive_cleanup_on_error_in_init(tmp_path, monkeypatch):
-    monkeypatch.delattr("hatch_inkscape_extension.builder.ZipFile")
+    monkeypatch.delattr("hatch_zipped_directory.builder.ZipFile")
 
     with pytest.raises(NameError):
         with ZipArchive.open(tmp_path / "test.zip", "install_name"):
@@ -93,7 +93,7 @@ def project_metadata(project_config, target_config, project_root):
     hatch_config = {
         "build": {
             "targets": {
-                "inkscape-extension": target_config,
+                "zipped-directory": target_config,
             },
         },
     }
@@ -108,10 +108,10 @@ def project_metadata(project_config, target_config, project_root):
 
 @pytest.fixture
 def builder(project_root, project_metadata):
-    return InkscapeExtensionBuilder(project_root, metadata=project_metadata)
+    return ZippedDirectoryBuilder(project_root, metadata=project_metadata)
 
 
-def test_InkscapeExtensionBuilder_clean(builder, tmp_path):
+def test_ZippedDirectoryBuilder_clean(builder, tmp_path):
     dist_path = tmp_path / "dist"
     dist_path.mkdir()
     dist_path.joinpath("foo.whl").touch()
@@ -122,7 +122,7 @@ def test_InkscapeExtensionBuilder_clean(builder, tmp_path):
     assert list(dist_path.iterdir()) == [dist_path / "foo.whl"]
 
 
-def test_InkscapeExtensionBuilder_build(builder, project_root, tmp_path):
+def test_ZippedDirectoryBuilder_build(builder, project_root, tmp_path):
     dist_path = tmp_path / "dist"
     project_root.joinpath("test.txt").write_text("content")
 
@@ -144,7 +144,7 @@ def test_InkscapeExtensionBuilder_build(builder, project_root, tmp_path):
     ({"install-name": "org.example.foo"}, "org.example.foo"),
     ({}, "project_name"),
 ])
-def test_InkscapeExtensionBuilder_build_data_install_name(builder, install_name):
+def test_ZippedDirectoryBuilder_build_data_install_name(builder, install_name):
     build_data = builder.get_default_build_data()
     assert build_data["install_name"] == install_name
     assert build_data["force_include"] == {}
@@ -153,7 +153,7 @@ def test_InkscapeExtensionBuilder_build_data_install_name(builder, install_name)
 @pytest.mark.parametrize("project_config", [
     {"readme": "README.txt"},
 ])
-def test_InkscapeExtensionBuilder_build_data_includes_readme(project_root, builder):
+def test_ZippedDirectoryBuilder_build_data_includes_readme(project_root, builder):
     project_root.joinpath("README.txt").touch()
 
     build_data = builder.get_default_build_data()
@@ -163,7 +163,7 @@ def test_InkscapeExtensionBuilder_build_data_includes_readme(project_root, build
     }
 
 
-def test_InkscapeExtensionBuilder_build_data_includes_license(project_root, builder):
+def test_ZippedDirectoryBuilder_build_data_includes_license(project_root, builder):
     project_root.joinpath("COPYING").touch()
 
     build_data = builder.get_default_build_data()

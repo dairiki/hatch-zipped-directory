@@ -1,6 +1,6 @@
 import pytest
 
-from hatch_inkscape_extension.utils import atomic_write
+from hatch_zipped_directory.utils import atomic_write
 
 
 def test_atomic_write(tmp_path):

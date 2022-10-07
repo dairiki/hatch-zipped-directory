@@ -18,7 +18,7 @@ from hatchling.builders.utils import normalize_relative_path
 from .metadata import json_metadata_2_1
 from .utils import atomic_write
 
-__all__ = ["InkscapeExtensionBuilder"]
+__all__ = ["ZippedDirectoryBuilder"]
 
 
 class ZipArchive:
@@ -44,8 +44,8 @@ class ZipArchive:
                 yield cls(zipfd, root_path)
 
 
-class InkscapeExtensionBuilder(BuilderInterface):
-    PLUGIN_NAME = "inkscape-extension"
+class ZippedDirectoryBuilder(BuilderInterface):
+    PLUGIN_NAME = "zipped-directory"
 
     def get_version_api(self) -> dict[str, Callable[..., str]]:
         return {"standard": self.build_standard}
