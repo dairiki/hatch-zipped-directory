@@ -2,7 +2,7 @@
 # See https://pre-commit.com/hooks.html for more hooks
 repos:
 - repo: https://github.com/pre-commit/pre-commit-hooks
-  rev: v3.2.0
+  rev: v4.3.0
   hooks:
     - id: check-yaml
     - id: check-toml
@@ -28,13 +28,13 @@ repos:
   - id: yesqa
 
 - repo: https://github.com/asottile/pyupgrade
-  rev: 'v2.37.3'
+  rev: 'v3.0.0'
   hooks:
     - id: pyupgrade
       args: ["--py37-plus"]
 
 - repo: https://github.com/asottile/reorder_python_imports
-  rev: v3.8.2
+  rev: v3.8.3
   hooks:
     - id: reorder-python-imports
       args: ["--py37-plus"]
@@ -43,15 +43,14 @@ repos:
   rev: '5.0.4'
   hooks:
     - id: flake8
-      args: ["--append-config", "tox.ini"]
       language_version: python3
       additional_dependencies:
       # NOTE: autoupdate does not pick up flake8-bugbear since it is a
       # transitive dependency. Make sure to update flake8-bugbear
       # manually on a regular basis.
-      - flake8-bugbear==22.7.1
+      - flake8-bugbear==22.9.23
 
 - repo: https://github.com/psf/black
-  rev: '22.6.0'
+  rev: '22.10.0'
   hooks:
     - id: black

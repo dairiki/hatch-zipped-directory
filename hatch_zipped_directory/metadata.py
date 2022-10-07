@@ -1,13 +1,11 @@
 from __future__ import annotations
 
-from typing import Dict
-
 from hatchling.metadata.core import ProjectMetadata
 
 __all__ = ["json_metadata_2_1"]
 
 
-def json_metadata_2_1(metadata: ProjectMetadata) -> Dict[str, str | list[str]]:
+def json_metadata_2_1(metadata: ProjectMetadata) -> dict[str, str | list[str]]:
     data = {
         "metadata_version": "2.1",
         "name": metadata.core.raw_name,

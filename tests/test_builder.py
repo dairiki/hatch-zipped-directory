@@ -3,9 +3,9 @@ import os
 from pathlib import Path
 from zipfile import ZipFile
 
+import pytest
 from hatchling.builders.plugin.interface import IncludedFile
 from hatchling.metadata.core import ProjectMetadata
-import pytest
 
 from hatch_zipped_directory.builder import ZipArchive
 from hatch_zipped_directory.builder import ZippedDirectoryBuilder
@@ -25,7 +25,7 @@ def test_ZipArchive_cleanup_on_error_in_init(tmp_path, monkeypatch):
 
     with pytest.raises(NameError):
         with ZipArchive.open(tmp_path / "test.zip", "install_name"):
-            pass                # no cov
+            pass  # no cov
     assert len(list(tmp_path.iterdir())) == 0
 
 
@@ -140,19 +140,25 @@ def test_ZippedDirectoryBuilder_build(builder, project_root, tmp_path):
     assert json_metadata["version"] == "1.23"
 
 
-@pytest.mark.parametrize("target_config, install_name", [
-    ({"install-name": "org.example.foo"}, "org.example.foo"),
-    ({}, "project_name"),
-])
+@pytest.mark.parametrize(
+    "target_config, install_name",
+    [
+        ({"install-name": "org.example.foo"}, "org.example.foo"),
+        ({}, "project_name"),
+    ],
+)
 def test_ZippedDirectoryBuilder_build_data_install_name(builder, install_name):
     build_data = builder.get_default_build_data()
     assert build_data["install_name"] == install_name
     assert build_data["force_include"] == {}
 
 
-@pytest.mark.parametrize("project_config", [
-    {"readme": "README.txt"},
-])
+@pytest.mark.parametrize(
+    "project_config",
+    [
+        {"readme": "README.txt"},
+    ],
+)
 def test_ZippedDirectoryBuilder_build_data_includes_readme(project_root, builder):
     project_root.joinpath("README.txt").touch()
 

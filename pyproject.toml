@@ -47,16 +47,23 @@ dependencies = [
   "pytest",
   "pytest-cov",
 ]
+[tool.hatch.envs.default.scripts]
+full = [
+    "pip freeze | paste -sd , -",
+    "pytest --cov-report=term-missing --cov-config=pyproject.toml --cov=hatch_zipped_directory --cov=tests",
+]
+
+[tool.hatch.envs.dev]
 extra-dependencies = [
   "flake8",
   "flake8-bugbear",
   "mypy",
 ]
-
-[tool.hatch.envs.default.scripts]
-cov = "pytest --cov-report=term-missing --cov-config=pyproject.toml --cov=hatch_zipped_directory --cov=tests"
-no-cov = "cov --no-cov"
-full = "hatch run test:cov"
+[tool.hatch.envs.dev.scripts]
+lint = [
+    "flake8 {args:.}",
+    "mypy {args:hatch_zipped_directory}",
+]
 
 [tool.hatch.envs.test]
 extra-dependencies = []

@@ -36,9 +36,7 @@ class ZipArchive:
 
     @classmethod
     @contextmanager
-    def open(
-        cls, dst: str | os.PathLike[str], root_path: str
-    ) -> Iterator["ZipArchive"]:
+    def open(cls, dst: str | os.PathLike[str], root_path: str) -> Iterator[ZipArchive]:
         with atomic_write(dst) as fp:
             with ZipFile(fp, "w", compression=ZIP_DEFLATED) as zipfd:
                 yield cls(zipfd, root_path)
@@ -56,9 +54,7 @@ class ZippedDirectoryBuilder(BuilderInterface):
                 os.remove(os.path.join(directory, filename))
 
     def build_standard(self, directory: str, **build_data: Any) -> str:
-        project_name = self.normalize_file_name_component(
-            self.metadata.core.raw_name
-        )
+        project_name = self.normalize_file_name_component(self.metadata.core.raw_name)
         target = Path(directory, f"{project_name}-{self.metadata.version}.zip")
 
         install_name: str = build_data["install_name"]
