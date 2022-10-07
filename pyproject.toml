@@ -24,7 +24,9 @@ classifiers = [
   "Programming Language :: Python :: Implementation :: CPython",
   "Topic :: System :: Archiving :: Packaging",
 ]
-dependencies = []
+dependencies = [
+    "hatchling",
+]
 dynamic = ["version"]
 
 [project.urls]
@@ -44,16 +46,20 @@ source = "vcs"
 dependencies = [
   "pytest",
   "pytest-cov",
-
+]
+extra-dependencies = [
   "flake8",
   "flake8-bugbear",
   "mypy",
-  "hatchling",
 ]
+
 [tool.hatch.envs.default.scripts]
 cov = "pytest --cov-report=term-missing --cov-config=pyproject.toml --cov=hatch_inkscape_extension --cov=tests"
 no-cov = "cov --no-cov"
+full = "hatch run test:cov"
 
+[tool.hatch.envs.test]
+extra-dependencies = []
 [[tool.hatch.envs.test.matrix]]
 python = ["37", "38", "39", "310", "311"]
 
