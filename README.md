@@ -2,6 +2,7 @@
 
 [![PyPI - Version](https://img.shields.io/pypi/v/hatch-zipped-directory.svg)](https://pypi.org/project/hatch-zipped-directory)
 [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/hatch-zipped-directory.svg)](https://pypi.org/project/hatch-zipped-directory)
+[![Tests](https://github.com/dairiki/hatch-zipped-directory/actions/workflows/tests.yml/badge.svg)](https://github.com/dairiki/hatch-zipped-directory/actions/workflows/tests.yml)
 
 -----
 
