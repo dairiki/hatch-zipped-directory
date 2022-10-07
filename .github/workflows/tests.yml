@@ -27,7 +27,7 @@ jobs:
     - name: Install hatch
       run: |
         python -m pip install --upgrade pip
-        pip install hatch
+        pip install hatch hatch-vcs
 
     - run: hatch run full
 
@@ -44,7 +44,7 @@ jobs:
     - name: Install hatch, pre-commit
       run: |
         python -m pip install --upgrade pip
-        pip install hatch pre-commit
+        pip install hatch hatch-vcs pre-commit
 
     - name: Run mypy
       run: hatch run dev:mypy hatch_zipped_directory

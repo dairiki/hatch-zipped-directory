@@ -1,10 +1,9 @@
 [project]
 name = "hatch-zipped-directory"
 description = 'A custom builder to build zipped directories'
-readme = "README.md"
 requires-python = ">=3.7"
 license = "MIT"
-keywords = []
+keywords = ["hatch", "packaging"]
 authors = [
   { name = "Jeff Dairiki", email = "dairiki@dairiki.org" },
 ]
@@ -27,7 +26,7 @@ classifiers = [
 dependencies = [
     "hatchling",
 ]
-dynamic = ["version"]
+dynamic = ["version", "readme"]
 
 [project.urls]
 Homepage = "https://github.com/dairiki/hatch-zipped-directory"
@@ -39,8 +38,18 @@ zipped-directory = "hatch_zipped_directory.hooks"
 requires = ["hatchling", "hatch-vcs"]
 build-backend = "hatchling.build"
 
+[tool.hatch.metadata.hooks.custom]
+# Custom hook in hatch_build.py concatenates README and CHANGES
 [tool.hatch.version]
 source = "vcs"
+[tool.hatch.build.targets.sdist]
+include = [
+    "/hatch_zipped_directory",
+    "/tests",
+    "/.flake8",
+    "/CHANGES.md",
+    "/README.md",
+]
 
 [tool.hatch.envs.default]
 dependencies = [
