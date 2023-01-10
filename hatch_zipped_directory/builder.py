@@ -4,6 +4,7 @@ import json
 import os
 from contextlib import contextmanager
 from pathlib import Path
+from pathlib import PurePosixPath
 from typing import Any
 from typing import Callable
 from typing import Iterable
@@ -23,16 +24,16 @@ __all__ = ["ZippedDirectoryBuilder"]
 
 class ZipArchive:
     def __init__(self, zipfd: ZipFile, root_path: str):
-        self.root_path = root_path
+        self.root_path = PurePosixPath(root_path)
         self.zipfd = zipfd
 
     def add_file(self, included_file: IncludedFile) -> None:
-        arcname = f"{self.root_path}/{included_file.distribution_path}"
+        arcname = self.root_path / included_file.distribution_path
         self.zipfd.write(included_file.path, arcname=arcname)
 
     def write_file(self, path: str, data: bytes | str) -> None:
-        arcname = f"{self.root_path}/{path}"
-        self.zipfd.writestr(arcname, data)
+        arcname = self.root_path / path
+        self.zipfd.writestr(os.fspath(arcname), data)
 
     @classmethod
     @contextmanager

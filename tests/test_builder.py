@@ -37,7 +37,15 @@ def test_ZipArchive_cleanup_on_error(tmp_path):
     assert len(list(tmp_path.iterdir())) == 0
 
 
-def test_ZipArchive_add_file(tmp_path):
+@pytest.mark.parametrize(
+    "install_name, arcname_prefix",
+    [
+        ("install_prefix", "install_prefix/"),
+        ("", ""),
+        (".", ""),
+    ],
+)
+def test_ZipArchive_add_file(tmp_path, install_name, arcname_prefix):
     relative_path = "src/foo"
     path = tmp_path / relative_path
     path.parent.mkdir(parents=True)
@@ -48,21 +56,29 @@ def test_ZipArchive_add_file(tmp_path):
     )
 
     archive_path = tmp_path / "test.zip"
-    with ZipArchive.open(archive_path, "install_name") as archive:
+    with ZipArchive.open(archive_path, install_name) as archive:
         archive.add_file(included_file)
 
     assert zip_contents(archive_path) == {
-        "install_name/bar": "content",
+        f"{arcname_prefix}bar": "content",
     }
 
 
-def test_ZipArchive_write_file(tmp_path):
+@pytest.mark.parametrize(
+    "install_name, arcname_prefix",
+    [
+        ("install_prefix", "install_prefix/"),
+        ("", ""),
+        (".", ""),
+    ],
+)
+def test_ZipArchive_write_file(tmp_path, install_name, arcname_prefix):
     archive_path = tmp_path / "test.zip"
-    with ZipArchive.open(archive_path, "install_name") as archive:
+    with ZipArchive.open(archive_path, install_name) as archive:
         archive.write_file("foo", "contents\n")
 
     assert zip_contents(archive_path) == {
-        "install_name/foo": "contents\n",
+        f"{arcname_prefix}foo": "contents\n",
     }
 
 
@@ -122,7 +138,15 @@ def test_ZippedDirectoryBuilder_clean(builder, tmp_path):
     assert list(dist_path.iterdir()) == [dist_path / "foo.whl"]
 
 
-def test_ZippedDirectoryBuilder_build(builder, project_root, tmp_path):
+@pytest.mark.parametrize(
+    "target_config, arcname_prefix",
+    [
+        ({}, "project_name/"),
+        ({"install-name": "org.example.foo"}, "org.example.foo/"),
+        ({"install-name": ""}, ""),
+    ],
+)
+def test_ZippedDirectoryBuilder_build(builder, project_root, tmp_path, arcname_prefix):
     dist_path = tmp_path / "dist"
     project_root.joinpath("test.txt").write_text("content")
 
@@ -133,10 +157,10 @@ def test_ZippedDirectoryBuilder_build(builder, project_root, tmp_path):
     assert artifact.relative_to(dist_path) == Path("project_name-1.23.zip")
     contents = zip_contents(artifact)
     assert set(contents) == {
-        "org.example.project/test.txt",
-        "org.example.project/METADATA.json",
+        f"{arcname_prefix}test.txt",
+        f"{arcname_prefix}METADATA.json",
     }
-    json_metadata = json.loads(contents["org.example.project/METADATA.json"])
+    json_metadata = json.loads(contents[f"{arcname_prefix}METADATA.json"])
     assert json_metadata["version"] == "1.23"
 
 

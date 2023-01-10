@@ -11,7 +11,8 @@ a custom builder to support building zip archives for quasi-manual
 installation into various foreign package installation systems.
 (Specifically, I use this for packaging
 [Inkscape](https://inkscape.org/) extensions and symbols libraries,
-but it may be useful in other contexts.)
+but it may be useful in other contexts, such as deploying to cloud
+compute platforms.)
 
 The builder creates a zip archive.  All the contents of the zip
 archive will be included under a single specific top-level directory.
@@ -19,6 +20,7 @@ The default name of the top-level directory is a file-name-safe
 version of the project name, however the name of the directory may be
 configured by setting the `install-name` key in the target-specific
 configuration section.
+This behavior may be disabled by setting `install-name = ''`.
 
 In addition to whatever files are selected for inclusion in the
 archive via Hatch’s regular [build configuration
