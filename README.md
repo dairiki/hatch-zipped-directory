@@ -28,7 +28,7 @@ the install directory within the zip archive.
 
 As well, a `METADATA.json` file containing the project metadata in
 JSON format (as described in
-[PEP566](https://peps.python.org/pep-0566/#json-compatible-metadata))
+[PEP 566](https://peps.python.org/pep-0566/#json-compatible-metadata))
 will be included in the top level of the install directory within the
 zip archive.
 
@@ -79,7 +79,7 @@ will build a zip archive named `dist/test_project-0.42.zip` with the following
 structure:
 ```
 .
-└── org.example.tests
+└── org.example.test
     ├── LICENSE.txt
     ├── METADATA.json
     ├── README.md
