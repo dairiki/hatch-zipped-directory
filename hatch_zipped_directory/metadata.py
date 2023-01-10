@@ -6,7 +6,7 @@ __all__ = ["json_metadata_2_1"]
 
 
 def json_metadata_2_1(metadata: ProjectMetadata) -> dict[str, str | list[str]]:
-    data = {
+    data: dict[str, str | list[str]] = {
         "metadata_version": "2.1",
         "name": metadata.core.raw_name,
         "version": metadata.version,
