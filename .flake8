@@ -1,7 +1,6 @@
 [flake8]
-max-line-length = 80
-select = C,E,F,W,B,B950
+max-line-length = 88
+select = C,E,F,W,B
 extend-ignore =
-    E203,              # whitespace before ':' (conflicts with black)
-    E501,              # line too long (B950 is better)
-    W503               # line break occurred before a binary operator (defunct)
+    # whitespace before ':' (conflicts with black)
+    E203
