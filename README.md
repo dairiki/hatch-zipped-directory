@@ -3,6 +3,7 @@
 [![PyPI - Version](https://img.shields.io/pypi/v/hatch-zipped-directory.svg)](https://pypi.org/project/hatch-zipped-directory)
 [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/hatch-zipped-directory.svg)](https://pypi.org/project/hatch-zipped-directory)
 [![Tests](https://github.com/dairiki/hatch-zipped-directory/actions/workflows/tests.yml/badge.svg)](https://github.com/dairiki/hatch-zipped-directory/actions/workflows/tests.yml)
+[![Trackgit Views](https://us-central1-trackgit-analytics.cloudfunctions.net/token/ping/lhautvz4zffrt8jawcpl)](https://trackgit.com)
 
 -----
 
