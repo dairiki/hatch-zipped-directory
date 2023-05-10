@@ -1,6 +1,6 @@
 ## Changes
 
-### 0.1.0b3 (unreleased)
+### 0.1.0b3 (2023-05-10)
 
 #### Features
 
