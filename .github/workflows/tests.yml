@@ -1,11 +1,17 @@
-name: Tests
+name: Test and Build
 
 on:
-  - push
-  - pull_request
+  workflow_call:
+    outputs:
+      version-type:
+        description: |
+          Type of version (from VCS version). This is one of 'local', 'dev', 'pre', or 'release'.
 
-env:
-  'default-python-version': '3.11'
+          Note that unless a commit is tagged, the version type will always be 'local'.
+        value: ${{ jobs.build.outputs.version-type }}
+  workflow_dispatch:
+  schedule:
+    - cron: '43 3 * * 2'
 
 jobs:
   tests:
@@ -34,12 +40,20 @@ jobs:
   lint:
     name: Lint
     runs-on: 'ubuntu-latest'
+    env:
+      python-version: '3.11'
     steps:
     - uses: actions/checkout@v3
 
     - uses: actions/setup-python@v4
       with:
-        python-version: ${{ env.default-python-version }}
+        python-version: ${{ env.python-version }}
+
+    - name: pre-commit cache
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pre-commit
+        key: py-${{ env.python-version }}-${{ hashFiles('.pre-commit-config.yaml') }}
 
     - name: Install hatch, pre-commit
       run: |
@@ -51,3 +65,40 @@ jobs:
 
     - run: pre-commit run -a
       if: always()
+
+  build:
+    name: Build distribution
+    needs: [tests, lint]
+    runs-on: ubuntu-latest
+    outputs:
+      version-type: ${{ steps.classify-version.outputs.version-type }}
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - run: python -m pip install --upgrade pip
+      - run: python -m pip install hatch hatch-vcs packaging
+      - run: hatch build
+      - uses: actions/upload-artifact@v3
+        with:
+          name: dist
+          path: dist
+          retention-days: 1
+
+      - name: Classify Version
+        id: classify-version
+        run: |
+          hatch version | python -c '
+          import sys, packaging.version
+          version = packaging.version.parse(sys.stdin.read())
+          if version.local:
+              version_type = "local"
+          elif version.is_devrelease:
+              version_type = "dev"
+          elif version.is_prerelease:
+              version_type = "pre"
+          else:
+              version_type = "release"
+          print(f"version-type={version_type}")
+          print(f"version-type={version_type}", file=sys.stderr)
+          ' >> "$GITHUB_OUTPUT"

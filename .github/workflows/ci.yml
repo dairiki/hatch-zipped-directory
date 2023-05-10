@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  push:
+    branches: '*'
+    tags: 'v*'
+  pull_request:
+
+jobs:
+  build-dist:
+    name: Run Tests and Build Dist
+    uses: ./.github/workflows/tests.yml
+
+  pypi-publish:
+    name: Upload to PyPI
+    needs: build-dist
+    if: contains(fromJSON('["pre", "release"]'), needs.build-dist.outputs.version-type)
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/project/hatch-zipped-directory/
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v3
+        with:
+          name: dist
+          path: dist
+      - uses: pypa/gh-action-pypi-publish@release/v1
+
+  gh-release:
+    name: Post GH Release
+    needs: [build-dist, pypi-publish]
+    if: contains(fromJSON('["pre", "release"]'), needs.build-dist.outputs.version-type)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: softprops/action-gh-release@v1
+        with:
+          generate_release_notes: true
+          prerelease: ${{ needs.build-dist.outputs.version-type != 'release' }}
