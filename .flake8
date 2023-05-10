@@ -4,3 +4,5 @@ select = C,E,F,W,B
 extend-ignore =
     # whitespace before ':' (conflicts with black)
     E203
+    # line break before binary operator
+    W503
