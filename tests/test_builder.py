@@ -1,5 +1,6 @@
 import json
 import os
+import re
 from pathlib import Path
 from zipfile import ZipFile
 
@@ -125,6 +126,24 @@ def project_metadata(project_config, target_config, project_root):
 @pytest.fixture
 def builder(project_root, project_metadata):
     return ZippedDirectoryBuilder(project_root, metadata=project_metadata)
+
+
+@pytest.mark.parametrize("target_config", [{"core-metadata-version": "2.2"}])
+def test_config_core_metadata_constructor(builder):
+    metadata = builder.config.core_metadata_constructor(builder.metadata)
+    assert re.search(r"(?im)^Metadata-Version: 2.2$", metadata)
+
+
+@pytest.mark.parametrize("target_config", [{"core-metadata-version": None}])
+def test_config_core_metadata_constructor_type_error(builder):
+    with pytest.raises(TypeError, match="must be a string"):
+        builder.config.core_metadata_constructor(builder.metadata)
+
+
+@pytest.mark.parametrize("target_config", [{"core-metadata-version": "42.203"}])
+def test_config_core_metadata_constructor_value_error(builder):
+    with pytest.raises(ValueError, match="(?i)unknown metadata version"):
+        builder.config.core_metadata_constructor(builder.metadata)
 
 
 def test_ZippedDirectoryBuilder_clean(builder, tmp_path):

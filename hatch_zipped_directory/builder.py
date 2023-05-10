@@ -12,11 +12,14 @@ from typing import Iterator
 from zipfile import ZIP_DEFLATED
 from zipfile import ZipFile
 
+from hatchling.builders.config import BuilderConfig
 from hatchling.builders.plugin.interface import BuilderInterface
 from hatchling.builders.plugin.interface import IncludedFile
 from hatchling.builders.utils import normalize_relative_path
+from hatchling.metadata.spec import DEFAULT_METADATA_VERSION
+from hatchling.metadata.spec import get_core_metadata_constructors
 
-from .metadata import json_metadata_2_1
+from .metadata import metadata_to_json
 from .utils import atomic_write
 
 __all__ = ["ZippedDirectoryBuilder"]
@@ -43,8 +46,33 @@ class ZipArchive:
                 yield cls(zipfd, root_path)
 
 
+class ZippedDirectoryBuilderConfig(BuilderConfig):
+    @property
+    def core_metadata_constructor(self):
+        core_metadata_version = self.target_config.get(
+            "core-metadata-version", DEFAULT_METADATA_VERSION
+        )
+        if not isinstance(core_metadata_version, str):
+            raise TypeError(
+                f"Field `tool.hatch.build.targets.{self.plugin_name}."
+                "core-metadata-version` must be a string"
+            )
+        constructors = get_core_metadata_constructors()
+        if core_metadata_version not in constructors:
+            raise ValueError(
+                f"Unknown metadata version `{core_metadata_version}` for field "
+                f"`tool.hatch.build.targets.{self.plugin_name}.core-metadata-version`. "
+                f'Available: {", ".join(sorted(constructors))}'
+            )
+        return constructors[core_metadata_version]
+
+
 class ZippedDirectoryBuilder(BuilderInterface):
     PLUGIN_NAME = "zipped-directory"
+
+    @classmethod
+    def get_config_class(cls):
+        return ZippedDirectoryBuilderConfig
 
     def get_version_api(self) -> dict[str, Callable[..., str]]:
         return {"standard": self.build_standard}
@@ -63,10 +91,11 @@ class ZippedDirectoryBuilder(BuilderInterface):
         with ZipArchive.open(target, install_name) as archive:
             for included_file in self.recurse_included_files():
                 archive.add_file(included_file)
-            archive.write_file(
-                "METADATA.json",
-                json.dumps(json_metadata_2_1(self.metadata), indent=2),
+
+            json_metadata = metadata_to_json(
+                self.config.core_metadata_constructor(self.metadata)
             )
+            archive.write_file("METADATA.json", json.dumps(json_metadata, indent=2))
         return os.fspath(target)
 
     def get_default_build_data(self) -> dict[str, Any]:

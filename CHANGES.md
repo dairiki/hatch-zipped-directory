@@ -1,5 +1,17 @@
 ## Changes
 
+### 0.1.0b3 (unreleased)
+
+#### Feature
+
+- Refactor JSON metadata code. Now we use `hatchling` to generate
+  conventionall RFC 822-formatted distribution metadata, then convert
+  that to JSON, explicitly following the steps outline in [PEP
+  566](https://peps.python.org/pep-0566/#json-compatible-metadata).
+  Among other things, this allows configuration of the
+  *Metadata-Version* by setting
+  `tool.hatch.build.targets.zipped-directory.core-metadata-version`.
+
 ### 0.1.0b2 (2023-01-10)
 
 #### Features

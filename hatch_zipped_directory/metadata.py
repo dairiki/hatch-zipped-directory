@@ -1,63 +1,70 @@
 from __future__ import annotations
 
-from hatchling.metadata.core import ProjectMetadata
+import email
+import textwrap
+from email.message import Message
 
-__all__ = ["json_metadata_2_1"]
+__all__ = ["metadata_to_json"]
 
 
-def json_metadata_2_1(metadata: ProjectMetadata) -> dict[str, str | list[str]]:
-    data: dict[str, str | list[str]] = {
-        "metadata_version": "2.1",
-        "name": metadata.core.raw_name,
-        "version": metadata.version,
-    }
-    if metadata.core.description:
-        data["summary"] = metadata.core.description
-    if metadata.core.urls:
-        data["project_url"] = [
-            f"{label}, {url}" for label, url in metadata.core.urls.items()
-        ]
-    for author, author_data in [
-        ("author", metadata.core.authors_data),
-        ("maintainer", metadata.core.maintainers_data),
-    ]:
-        if author_data["name"]:
-            data[author] = ", ".join(author_data["name"])
-        if author_data["email"]:
-            data[f"{author}_email"] = ", ".join(author_data["email"])
-    if metadata.core.license:
-        data["license"] = metadata.core.license
-    if metadata.core.license_files:
-        data["license_file"] = metadata.core.license_files
-    if metadata.core.keywords:
-        data["keywords"] = metadata.core.keywords
-    if metadata.core.classifiers:
-        data["classifier"] = metadata.core.classifiers
-    if metadata.core.requires_python:
-        data["requires_python"] = metadata.core.requires_python
+_MULTIPLE_USE_KEYS = {
+    key.lower()
+    for key in [
+        # PEP 345 (1.2)
+        "Platform",
+        "Supported-Platform",
+        "Classifier",
+        "Requires-Dist",
+        "Provides-Dist",
+        "Obsoletes-Dist",
+        "Requires-External",
+        "Project-URL",
+        # PEP 566 (2.1)
+        "Provides-Extra",
+        # PEP 643
+        "Dynamic",
+        # PEP 639
+        "License-File",
+    ]
+}
 
-    requires_dist = []
-    if metadata.core.dependencies:
-        requires_dist.extend(metadata.core.dependencies)
-    # FIXME: extra_dependencies?
-    if metadata.core.optional_dependencies:
-        data["provides-extra"] = list(metadata.core.optional_dependencies.keys())
-        requires_dist.extend(
-            _add_environment_marker(dependency, f"extra == {option!r}")
-            for option, dependencies in metadata.core.optional_dependencies.items()
-            for dependency in dependencies
-        )
-    if requires_dist:
-        data["requires_dist"] = requires_dist
 
-    if metadata.core.readme:
-        data["description_content_type"] = metadata.core.readme_content_type
-        data["description"] = metadata.core.readme
+def _dedent(value: str) -> str:
+    """Fix RFC 822 indentation.
+
+    Dedent all but first line.
+    """
+    first, nl, rest = value.partition("\n")
+    if not nl:
+        return value
+    return first + nl + textwrap.dedent(rest)
+
+
+def _get_value(headers: Message, key: str) -> str | list[str]:
+    lkey = key.lower()
+    if lkey in _MULTIPLE_USE_KEYS:
+        return list(map(_dedent, headers.get_all(key, [])))
+    elif lkey == "keywords":
+        return _dedent(headers[key]).split(",")
+    return _dedent(headers[key])
+
+
+def metadata_to_json(metadata: str) -> dict[str, str | list[str]]:
+    """Convert metadata text to JSON as described in `PEP 566`__.
+
+    __ https://peps.python.org/pep-0566/#json-compatible-metadata
+    """
+    headers = email.message_from_string(metadata)
+    assert not headers.is_multipart()
+    description = headers.get_payload()
+
+    data: dict[str, str | list[str]] = {}
+    for key in headers:
+        json_key = key.lower().replace("-", "_")
+        if json_key not in data:
+            data[json_key] = _get_value(headers, key)
+
+    if description:
+        data["description"] = description
 
     return data
-
-
-def _add_environment_marker(dependency: str, marker: str) -> str:
-    if ";" in dependency:
-        return f"{dependency} and {marker}"
-    return f"{dependency} ; {marker}"
