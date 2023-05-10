@@ -59,7 +59,13 @@ dependencies = [
 [tool.hatch.envs.default.scripts]
 full = [
     "pip freeze | paste -sd , -",
-    "pytest --cov-report=term-missing --cov-config=pyproject.toml --cov=hatch_zipped_directory --cov=tests",
+    """pytest \
+        --cov-fail-under=100 \
+        --cov-report=term-missing \
+        --cov-config=pyproject.toml \
+        --cov=hatch_zipped_directory \
+        --cov=tests
+    """,
 ]
 
 [tool.hatch.envs.dev]

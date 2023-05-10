@@ -2,7 +2,7 @@
 
 ### 0.1.0b3 (unreleased)
 
-#### Feature
+#### Features
 
 - Refactor JSON metadata code. Now we use `hatchling` to generate
   conventionall RFC 822-formatted distribution metadata, then convert
@@ -11,6 +11,10 @@
   Among other things, this allows configuration of the
   *Metadata-Version* by setting
   `tool.hatch.build.targets.zipped-directory.core-metadata-version`.
+
+#### Tests
+
+- We now have 100% test coverage.
 
 ### 0.1.0b2 (2023-01-10)
 
