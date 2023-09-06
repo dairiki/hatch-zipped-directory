@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import os
+import time
 from contextlib import contextmanager
 from pathlib import Path
 from pathlib import PurePosixPath
@@ -9,13 +10,14 @@ from typing import Any
 from typing import Callable
 from typing import Iterable
 from typing import Iterator
+from typing import Tuple
 from zipfile import ZIP_DEFLATED
-from zipfile import ZipFile
+from zipfile import ZipFile, ZipInfo
 
 from hatchling.builders.config import BuilderConfig
 from hatchling.builders.plugin.interface import BuilderInterface
 from hatchling.builders.plugin.interface import IncludedFile
-from hatchling.builders.utils import normalize_relative_path
+from hatchling.builders.utils import normalize_relative_path, get_reproducible_timestamp
 from hatchling.metadata.spec import DEFAULT_METADATA_VERSION
 from hatchling.metadata.spec import get_core_metadata_constructors
 
@@ -24,26 +26,43 @@ from .utils import atomic_write
 
 __all__ = ["ZippedDirectoryBuilder"]
 
+ZipTime = Tuple[int, int, int, int, int, int]
+
 
 class ZipArchive:
-    def __init__(self, zipfd: ZipFile, root_path: str):
+    def __init__(self, zipfd: ZipFile, root_path: str, *, reproducible: bool):
         self.root_path = PurePosixPath(root_path)
         self.zipfd = zipfd
+        self.reproducible = reproducible
+        self.timestamp: int | None = (
+            get_reproducible_timestamp() if reproducible else None
+        )
+        self.ziptime: ZipTime | None = (
+            time.gmtime(self.timestamp)[0:6] if self.timestamp else None
+        )
 
     def add_file(self, included_file: IncludedFile) -> None:
         arcname = self.root_path / included_file.distribution_path
-        self.zipfd.write(included_file.path, arcname=arcname)
+        info = ZipInfo.from_file(included_file.path, arcname)
+        if self.ziptime:
+            info.date_time = self.ziptime
+        with open(included_file.path, "rb") as f:
+            self.zipfd.writestr(info, f.read())
 
     def write_file(self, path: str, data: bytes | str) -> None:
-        arcname = self.root_path / path
-        self.zipfd.writestr(os.fspath(arcname), data)
+        info = ZipInfo(os.fspath(self.root_path / path))
+        if self.ziptime:
+            info.date_time = self.ziptime
+        self.zipfd.writestr(info, data)
 
     @classmethod
     @contextmanager
-    def open(cls, dst: str | os.PathLike[str], root_path: str) -> Iterator[ZipArchive]:
+    def open(
+        cls, dst: str | os.PathLike[str], root_path: str, *, reproducible: bool
+    ) -> Iterator[ZipArchive]:
         with atomic_write(dst) as fp:
             with ZipFile(fp, "w", compression=ZIP_DEFLATED) as zipfd:
-                yield cls(zipfd, root_path)
+                yield cls(zipfd, root_path, reproducible=reproducible)
 
 
 class ZippedDirectoryBuilderConfig(BuilderConfig):
@@ -88,7 +107,9 @@ class ZippedDirectoryBuilder(BuilderInterface):
 
         install_name: str = build_data["install_name"]
 
-        with ZipArchive.open(target, install_name) as archive:
+        with ZipArchive.open(
+            target, install_name, reproducible=self.config.reproducible
+        ) as archive:
             for included_file in self.recurse_included_files():
                 archive.add_file(included_file)
 
