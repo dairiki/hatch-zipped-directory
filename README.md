@@ -92,6 +92,21 @@ structure:
         └── more-code.py
 ```
 
+## Reproducible Builds
+
+By default, this plugin attempts to build [reproducible][reproducible
+builds] archives by setting the timestamps of the zip entries to a
+fixed value. When building in reproducible mode, the UNIX file modes
+of the archive entries is also normalized (to either 0644 or 0755
+depending on whether the file is executable.)
+
+The timestamp used for reproducible builds may be configured by
+setting the `SOURCE_DATE_EPOCH` environment variable.
+
+Reproducible builds may be disabled by setting `reproducible = false`
+in an appropriate section of `pyproject.toml` or `hatch.toml`.  See
+Hatch’s documentation on [Build Configuration] for details.
+
 
 ## Author
 
@@ -101,3 +116,6 @@ Jeff Dairiki <dairiki@dairiki.org>
 
 `hatch-zipped-directory` is distributed under the terms of the
 [MIT](https://spdx.org/licenses/MIT.html) license.
+
+[reproducible builds]: https://hatch.pypa.io/latest/config/build/#reproducible-builds
+[Build Configuration]: https://hatch.pypa.io/latest/config/build/
