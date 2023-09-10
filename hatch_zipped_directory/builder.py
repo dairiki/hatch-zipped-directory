@@ -18,7 +18,8 @@ from zipfile import ZipInfo
 from hatchling.builders.config import BuilderConfig
 from hatchling.builders.plugin.interface import BuilderInterface
 from hatchling.builders.plugin.interface import IncludedFile
-from hatchling.builders.utils import normalize_relative_path, get_reproducible_timestamp
+from hatchling.builders.utils import get_reproducible_timestamp
+from hatchling.builders.utils import normalize_relative_path
 from hatchling.metadata.spec import DEFAULT_METADATA_VERSION
 from hatchling.metadata.spec import get_core_metadata_constructors
 
