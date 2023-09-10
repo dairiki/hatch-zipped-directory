@@ -20,6 +20,7 @@ classifiers = [
   "Programming Language :: Python :: 3.9",
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: Implementation :: CPython",
   "Topic :: System :: Archiving :: Packaging",
 ]
@@ -83,7 +84,7 @@ lint = [
 [tool.hatch.envs.test]
 extra-dependencies = []
 [[tool.hatch.envs.test.matrix]]
-python = ["37", "38", "39", "310", "311"]
+python = ["37", "38", "39", "310", "311", "312"]
 
 [tool.coverage.run]
 branch = true
