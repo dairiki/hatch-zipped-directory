@@ -1,6 +1,6 @@
 ## Changes
 
-### 0.1.0b4 (unreleased)
+### 0.1.0b4 (2023-09-10)
 
 #### Features
 
