@@ -2,6 +2,9 @@ from __future__ import annotations
 
 import json
 import os
+import shutil
+import sys
+import time
 from contextlib import contextmanager
 from pathlib import Path
 from pathlib import PurePosixPath
@@ -11,39 +14,75 @@ from typing import Iterable
 from typing import Iterator
 from zipfile import ZIP_DEFLATED
 from zipfile import ZipFile
+from zipfile import ZipInfo
 
 from hatchling.builders.config import BuilderConfig
 from hatchling.builders.plugin.interface import BuilderInterface
 from hatchling.builders.plugin.interface import IncludedFile
+from hatchling.builders.utils import get_reproducible_timestamp
+from hatchling.builders.utils import normalize_file_permissions
 from hatchling.builders.utils import normalize_relative_path
+from hatchling.builders.utils import set_zip_info_mode
 from hatchling.metadata.spec import DEFAULT_METADATA_VERSION
 from hatchling.metadata.spec import get_core_metadata_constructors
 
 from .metadata import metadata_to_json
 from .utils import atomic_write
 
+if sys.version_info >= (3, 8):  # no cov
+    from functools import cached_property as optionally_cached_property
+else:  # no cov
+    optionally_cached_property = property
+
+
 __all__ = ["ZippedDirectoryBuilder"]
 
 
 class ZipArchive:
-    def __init__(self, zipfd: ZipFile, root_path: str):
+    def __init__(self, zipfd: ZipFile, root_path: str, *, reproducible: bool = True):
         self.root_path = PurePosixPath(root_path)
         self.zipfd = zipfd
+        self.reproducible = reproducible
 
     def add_file(self, included_file: IncludedFile) -> None:
+        # Logic mostly copied from hatchling.builders.wheel.WheelArchive.add_file
+        # https://github.com/pypa/hatch/blob/7dac9856d2545393f7dd96d31fc8620dde0dc12d/backend/src/hatchling/builders/wheel.py#L84-L112
         arcname = self.root_path / included_file.distribution_path
-        self.zipfd.write(included_file.path, arcname=arcname)
+        zinfo = ZipInfo.from_file(included_file.path, arcname)
+        if zinfo.is_dir():
+            raise ValueError(  # no cov
+                "ZipArchive.add_file does not support adding directories"
+            )
+
+        if self.reproducible:
+            zinfo.date_time = self._reproducible_date_time
+            # normalize mode (https://github.com/takluyver/flit/pull/66)
+            st_mode = (zinfo.external_attr >> 16) & 0xFFFF
+            set_zip_info_mode(zinfo, normalize_file_permissions(st_mode) & 0xFFFF)
+
+        with open(included_file.path, "rb") as src, self.zipfd.open(zinfo, "w") as dest:
+            shutil.copyfileobj(src, dest, 8 * 1024)  # type: ignore[misc] # mypy #14975
 
     def write_file(self, path: str, data: bytes | str) -> None:
         arcname = self.root_path / path
-        self.zipfd.writestr(os.fspath(arcname), data)
+        if self.reproducible:
+            date_time = self._reproducible_date_time
+        else:
+            date_time = time.localtime(time.time())[:6]
+        self.zipfd.writestr(ZipInfo(os.fspath(arcname), date_time=date_time), data)
 
     @classmethod
     @contextmanager
-    def open(cls, dst: str | os.PathLike[str], root_path: str) -> Iterator[ZipArchive]:
+    def open(
+        cls, dst: str | os.PathLike[str], root_path: str, *, reproducible: bool = True
+    ) -> Iterator[ZipArchive]:
         with atomic_write(dst) as fp:
             with ZipFile(fp, "w", compression=ZIP_DEFLATED) as zipfd:
-                yield cls(zipfd, root_path)
+                yield cls(zipfd, root_path, reproducible=reproducible)
+
+    @optionally_cached_property
+    def _reproducible_date_time(self):
+        return time.gmtime(get_reproducible_timestamp())[0:6]
 
 
 class ZippedDirectoryBuilderConfig(BuilderConfig):
@@ -88,7 +127,9 @@ class ZippedDirectoryBuilder(BuilderInterface):
 
         install_name: str = build_data["install_name"]
 
-        with ZipArchive.open(target, install_name) as archive:
+        with ZipArchive.open(
+            target, install_name, reproducible=self.config.reproducible
+        ) as archive:
             for included_file in self.recurse_included_files():
                 archive.add_file(included_file)
 

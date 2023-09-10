@@ -1,5 +1,19 @@
 ## Changes
 
+### 0.1.0b4 (unreleased)
+
+#### Features
+
+- Add support for [reproducible builds] which are now enabled by
+  default. When enabled, timestamps in the zip archive are set to a
+  fixed value (configurable via the `SOURCE_DATE_EPOCH` environment
+  variable) and the UNIX access modes of archive members are
+  [normalized to either 0644 or 0755][mode-normalization] depending on
+  whether the file is executable or not.
+
+[reproducible builds]: https://hatch.pypa.io/latest/config/build/#reproducible-builds
+[mode-normalization]: https://github.com/pypa/flit/pull/66
+
 ### 0.1.0b3 (2023-05-10)
 
 #### Features
