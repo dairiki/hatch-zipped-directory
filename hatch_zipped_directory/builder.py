@@ -12,7 +12,8 @@ from typing import Iterable
 from typing import Iterator
 from typing import Tuple
 from zipfile import ZIP_DEFLATED
-from zipfile import ZipFile, ZipInfo
+from zipfile import ZipFile
+from zipfile import ZipInfo
 
 from hatchling.builders.config import BuilderConfig
 from hatchling.builders.plugin.interface import BuilderInterface
