@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import json
 import os
+import shutil
+import sys
 import time
 from contextlib import contextmanager
 from pathlib import Path
@@ -10,7 +12,6 @@ from typing import Any
 from typing import Callable
 from typing import Iterable
 from typing import Iterator
-from typing import Tuple
 from zipfile import ZIP_DEFLATED
 from zipfile import ZipFile
 from zipfile import ZipInfo
@@ -26,35 +27,39 @@ from hatchling.metadata.spec import get_core_metadata_constructors
 from .metadata import metadata_to_json
 from .utils import atomic_write
 
-__all__ = ["ZippedDirectoryBuilder"]
+if sys.version_info >= (3, 8):  # no cov
+    from functools import cached_property as optionally_cached_property
+else:  # no cov
+    optionally_cached_property = property
 
-ZipTime = Tuple[int, int, int, int, int, int]
+
+__all__ = ["ZippedDirectoryBuilder"]
 
 
 class ZipArchive:
-    def __init__(self, zipfd: ZipFile, root_path: str, *, reproducible: bool):
+    def __init__(self, zipfd: ZipFile, root_path: str, *, reproducible: bool = True):
         self.root_path = PurePosixPath(root_path)
         self.zipfd = zipfd
         self.reproducible = reproducible
-        self.timestamp: int | None = (
-            get_reproducible_timestamp() if reproducible else None
-        )
-        self.ziptime: ZipTime | None = (
-            time.gmtime(self.timestamp)[0:6] if self.timestamp else None
-        )
 
     def add_file(self, included_file: IncludedFile) -> None:
         arcname = self.root_path / included_file.distribution_path
-        info = ZipInfo.from_file(included_file.path, arcname)
-        if self.ziptime:
-            info.date_time = self.ziptime
-        with open(included_file.path, "rb") as f:
-            self.zipfd.writestr(info, f.read())
+        zinfo = ZipInfo.from_file(included_file.path, arcname)
+        if zinfo.is_dir():
+            raise ValueError(  # no cov
+                "ZipArchive.add_file does not support adding directories"
+            )
+
+        if self.reproducible:
+            zinfo.date_time = self._reproducible_date_time
+
+        with open(included_file.path, "rb") as src, self.zipfd.open(zinfo, "w") as dest:
+            shutil.copyfileobj(src, dest, 8 * 1024)  # type: ignore[misc] # mypy #14975
 
     def write_file(self, path: str, data: bytes | str) -> None:
         arcname = self.root_path / path
-        if self.ziptime is not None:
-            date_time = self.ziptime
+        if self.reproducible:
+            date_time = self._reproducible_date_time
         else:
             date_time = time.localtime(time.time())[:6]
         self.zipfd.writestr(ZipInfo(os.fspath(arcname), date_time=date_time), data)
@@ -62,11 +67,15 @@ class ZipArchive:
     @classmethod
     @contextmanager
     def open(
-        cls, dst: str | os.PathLike[str], root_path: str, *, reproducible: bool
+        cls, dst: str | os.PathLike[str], root_path: str, *, reproducible: bool = True
     ) -> Iterator[ZipArchive]:
         with atomic_write(dst) as fp:
             with ZipFile(fp, "w", compression=ZIP_DEFLATED) as zipfd:
                 yield cls(zipfd, root_path, reproducible=reproducible)
+
+    @optionally_cached_property
+    def _reproducible_date_time(self):
+        return time.gmtime(get_reproducible_timestamp())[0:6]
 
 
 class ZippedDirectoryBuilderConfig(BuilderConfig):
