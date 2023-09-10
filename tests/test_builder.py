@@ -1,7 +1,7 @@
-import hashlib
 import json
 import os
 import re
+import time
 from pathlib import Path
 from zipfile import ZipFile
 
@@ -11,18 +11,6 @@ from hatchling.metadata.core import ProjectMetadata
 
 from hatch_zipped_directory.builder import ZipArchive
 from hatch_zipped_directory.builder import ZippedDirectoryBuilder
-
-READ_SIZE = 65536
-
-
-def getsha256(filename) -> str:
-    sha256 = hashlib.sha256()
-    with open(filename, "rb") as f:
-        data = f.read(READ_SIZE)
-        while data:
-            sha256.update(data)
-            data = f.read(READ_SIZE)
-    return sha256.hexdigest()
 
 
 def zip_contents(path):
@@ -34,95 +22,120 @@ def zip_contents(path):
     return files
 
 
-def zip_timestamps(path):
-    zf = ZipFile(path)
-    timestamps = []
-    for info in zf.infolist():
-        timestamps.append(info.date_time)
-    return timestamps
+@pytest.fixture(
+    params=[
+        pytest.param(True, id="[reproducible]"),
+        pytest.param(True, id="[non-reproducible]"),
+    ]
+)
+def reproducible(request: pytest.FixtureRequest) -> bool:
+    return request.param
 
 
-def assert_zip_timestamps(archive_path, reproducible: bool):
-    if reproducible:
-        condition = lambda t: t == (2020, 2, 2, 0, 0, 0)
-    else:
-        condition = lambda t: t != (2020, 2, 2, 0, 0, 0)
-    assert all(condition(t) for t in zip_timestamps(archive_path))
+def test_ZipArchive_cleanup_on_error_in_init(tmp_path, monkeypatch, reproducible):
+    monkeypatch.delattr("hatch_zipped_directory.builder.ZipFile")
+
+    with pytest.raises(NameError):
+        with ZipArchive.open(
+            tmp_path / "test.zip", "install_name", reproducible=reproducible
+        ):
+            pass  # no cov
+    assert len(list(tmp_path.iterdir())) == 0
+
+
+def test_ZipArchive_cleanup_on_error(tmp_path, reproducible):
+    archive_path = tmp_path / "test.zip"
+    with pytest.raises(RuntimeError):
+        with ZipArchive.open(archive_path, "install_name", reproducible=reproducible):
+            raise RuntimeError("test")
+    assert len(list(tmp_path.iterdir())) == 0
 
 
 @pytest.mark.parametrize(
-    "reproducible",
-    [True, False],
-    ids=lambda val: "[reproducible]" if val else "[non-reproducible]",
+    "install_name, arcname_prefix",
+    [
+        ("install_prefix", "install_prefix/"),
+        ("", ""),
+        (".", ""),
+    ],
 )
-class TestZipArchive:
-    def test_cleanup_on_error_in_init(self, tmp_path, monkeypatch, reproducible):
-        monkeypatch.delattr("hatch_zipped_directory.builder.ZipFile")
-
-        with pytest.raises(NameError):
-            with ZipArchive.open(
-                tmp_path / "test.zip", "install_name", reproducible=reproducible
-            ):
-                pass  # no cov
-        assert len(list(tmp_path.iterdir())) == 0
-
-    def test_cleanup_on_error(self, tmp_path, reproducible):
-        archive_path = tmp_path / "test.zip"
-        with pytest.raises(RuntimeError):
-            with ZipArchive.open(
-                archive_path, "install_name", reproducible=reproducible
-            ):
-                raise RuntimeError("test")
-        assert len(list(tmp_path.iterdir())) == 0
-
-    @pytest.mark.parametrize(
-        "install_name, arcname_prefix",
-        [
-            ("install_prefix", "install_prefix/"),
-            ("", ""),
-            (".", ""),
-        ],
+def test_ZipArchive_add_file(tmp_path, reproducible, install_name, arcname_prefix):
+    relative_path = "src/foo"
+    path = tmp_path / relative_path
+    path.parent.mkdir(parents=True)
+    path.write_text("content")
+    distribution_path = "bar"
+    included_file = IncludedFile(
+        os.fspath(tmp_path / relative_path), relative_path, distribution_path
     )
-    def test_add_file(self, tmp_path, reproducible, install_name, arcname_prefix):
-        relative_path = "src/foo"
-        path = tmp_path / relative_path
-        path.parent.mkdir(parents=True)
-        path.write_text("content")
-        distribution_path = "bar"
-        included_file = IncludedFile(
-            os.fspath(tmp_path / relative_path), relative_path, distribution_path
-        )
 
-        archive_path = tmp_path / "test.zip"
-        with ZipArchive.open(
-            archive_path, install_name, reproducible=reproducible
-        ) as archive:
-            archive.add_file(included_file)
+    archive_path = tmp_path / "test.zip"
+    with ZipArchive.open(
+        archive_path, install_name, reproducible=reproducible
+    ) as archive:
+        archive.add_file(included_file)
 
-        assert zip_contents(archive_path) == {
-            f"{arcname_prefix}bar": "content",
-        }
-        assert_zip_timestamps(archive_path, reproducible)
+    assert zip_contents(archive_path) == {
+        f"{arcname_prefix}bar": "content",
+    }
 
-    @pytest.mark.parametrize(
-        "install_name, arcname_prefix",
-        [
-            ("install_prefix", "install_prefix/"),
-            ("", ""),
-            (".", ""),
-        ],
-    )
-    def test_write_file(self, tmp_path, reproducible, install_name, arcname_prefix):
-        archive_path = tmp_path / "test.zip"
-        with ZipArchive.open(
-            archive_path, install_name, reproducible=reproducible
-        ) as archive:
-            archive.write_file("foo", "contents\n")
 
-        assert zip_contents(archive_path) == {
-            f"{arcname_prefix}foo": "contents\n",
-        }
-        assert_zip_timestamps(archive_path, reproducible)
+@pytest.mark.parametrize(
+    "install_name, arcname_prefix",
+    [
+        ("install_prefix", "install_prefix/"),
+        ("", ""),
+        (".", ""),
+    ],
+)
+def test_ZipArchive_write_file(tmp_path, reproducible, install_name, arcname_prefix):
+    archive_path = tmp_path / "test.zip"
+    with ZipArchive.open(
+        archive_path, install_name, reproducible=reproducible
+    ) as archive:
+        archive.write_file("foo", "contents\n")
+
+    assert zip_contents(archive_path) == {
+        f"{arcname_prefix}foo": "contents\n",
+    }
+
+
+def test_ZipArchive_reproducible_timestamps(tmp_path: Path) -> None:
+    archive_path = tmp_path / "test.zip"
+    src_path = tmp_path / "bar"
+    src_path.touch()
+
+    with ZipArchive.open(archive_path, root_path="", reproducible=True) as archive:
+        archive.write_file("foo", "contents\n")
+        archive.add_file(IncludedFile(os.fspath(src_path), "bar", "bar"))
+
+    with ZipFile(archive_path) as zf:
+        infolist = zf.infolist()
+    assert len(infolist) == 2
+    reproducible_ts = (2020, 2, 2, 0, 0, 0)
+    assert all(info.date_time == reproducible_ts for info in infolist)
+
+
+def test_ZipArchive_copies_timestamps_if_not_reproducible(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    now = int(time.time() // 2) * 2  # NB: Zip timestamps have 2-second resolution
+    now_date_tuple = time.localtime(now)[:6]
+    monkeypatch.setattr("time.time", lambda: float(now))
+
+    archive_path = tmp_path / "test.zip"
+    src_path = tmp_path / "bar"
+    src_path.touch()
+    os.utime(src_path, (now, now))
+
+    with ZipArchive.open(archive_path, root_path="", reproducible=False) as archive:
+        archive.write_file("foo", "contents\n")
+        archive.add_file(IncludedFile(os.fspath(src_path), "bar", "bar"))
+
+    with ZipFile(archive_path) as zf:
+        infolist = zf.infolist()
+    assert len(infolist) == 2
+    assert all(info.date_time == now_date_tuple for info in infolist)
 
 
 @pytest.fixture
@@ -221,39 +234,29 @@ def test_ZippedDirectoryBuilder_build(builder, project_root, tmp_path, arcname_p
         f"{arcname_prefix}test.txt",
         f"{arcname_prefix}METADATA.json",
     }
-    assert_zip_timestamps(artifact, reproducible=True)
     json_metadata = json.loads(contents[f"{arcname_prefix}METADATA.json"])
     assert json_metadata["version"] == "1.23"
 
 
-@pytest.mark.parametrize(
-    "target_config",
-    [
-        {"reproducible": True},
-        {"reproducible": False},
-    ],
-)
-def test_ZippedDirectoryBuilder_reproducible(
-    builder, project_root, tmp_path, target_config
-):
+@pytest.mark.parametrize("target_config", [{"reproducible": True}])
+def test_ZippedDirectoryBuilder_reproducible(builder, project_root, tmp_path):
     dist_path = tmp_path / "dist"
     test_file = project_root.joinpath("test.txt")
     test_file.write_text("content")
 
-    digests = []
-    for _ in range(0, 2):
+    def build() -> Path:
         artifacts = list(builder.build(os.fspath(dist_path)))
         assert len(artifacts) == 1
-        artifact = Path(artifacts[0])
-        digests.append(getsha256(artifact))
-        os.remove(artifact)
-        # use some random epoch from the past, when `reproducible` enabled
-        # then digest of archive should not change
-        os.utime(test_file, (968250745, 968250745))
-    if target_config["reproducible"]:
-        assert digests[0] == digests[1]
-    else:
-        assert digests[0] != digests[1]
+        return Path(artifacts[0])
+
+    zip1 = build()
+
+    # use some random epoch from the past, when `reproducible` enabled
+    # then digest of archive should not change
+    os.utime(test_file, (968250745, 968250745))
+    zip2 = build()
+
+    assert zip1.read_bytes() == zip2.read_bytes()
 
 
 @pytest.mark.parametrize(
