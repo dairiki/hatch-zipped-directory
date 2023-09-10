@@ -20,7 +20,9 @@ from hatchling.builders.config import BuilderConfig
 from hatchling.builders.plugin.interface import BuilderInterface
 from hatchling.builders.plugin.interface import IncludedFile
 from hatchling.builders.utils import get_reproducible_timestamp
+from hatchling.builders.utils import normalize_file_permissions
 from hatchling.builders.utils import normalize_relative_path
+from hatchling.builders.utils import set_zip_info_mode
 from hatchling.metadata.spec import DEFAULT_METADATA_VERSION
 from hatchling.metadata.spec import get_core_metadata_constructors
 
@@ -43,6 +45,8 @@ class ZipArchive:
         self.reproducible = reproducible
 
     def add_file(self, included_file: IncludedFile) -> None:
+        # Logic mostly copied from hatchling.builders.wheel.WheelArchive.add_file
+        # https://github.com/pypa/hatch/blob/7dac9856d2545393f7dd96d31fc8620dde0dc12d/backend/src/hatchling/builders/wheel.py#L84-L112
         arcname = self.root_path / included_file.distribution_path
         zinfo = ZipInfo.from_file(included_file.path, arcname)
         if zinfo.is_dir():
@@ -52,6 +56,9 @@ class ZipArchive:
 
         if self.reproducible:
             zinfo.date_time = self._reproducible_date_time
+            # normalize mode (https://github.com/takluyver/flit/pull/66)
+            st_mode = (zinfo.external_attr >> 16) & 0xFFFF
+            set_zip_info_mode(zinfo, normalize_file_permissions(st_mode) & 0xFFFF)
 
         with open(included_file.path, "rb") as src, self.zipfd.open(zinfo, "w") as dest:
             shutil.copyfileobj(src, dest, 8 * 1024)  # type: ignore[misc] # mypy #14975

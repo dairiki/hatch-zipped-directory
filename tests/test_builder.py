@@ -1,6 +1,7 @@
 import json
 import os
 import re
+import stat
 import time
 from pathlib import Path
 from zipfile import ZipFile
@@ -136,6 +137,35 @@ def test_ZipArchive_copies_timestamps_if_not_reproducible(
         infolist = zf.infolist()
     assert len(infolist) == 2
     assert all(info.date_time == now_date_tuple for info in infolist)
+
+
+@pytest.mark.parametrize(
+    "original_mode, normalized_mode",
+    [
+        (0o400, 0o644),  # non-executable
+        (0o500, 0o755),  # executable
+    ],
+    ids=oct,
+)
+def test_ZipArchive_file_modes(
+    tmp_path: Path, reproducible: bool, original_mode: int, normalized_mode: int
+) -> None:
+    archive_path = tmp_path / "test.zip"
+    src_path = tmp_path / "testfile"
+    src_path.touch()
+    src_path.chmod(original_mode)
+
+    with ZipArchive.open(
+        archive_path, root_path="", reproducible=reproducible
+    ) as archive:
+        archive.add_file(IncludedFile(os.fspath(src_path), "testfile", "testfile"))
+
+    with ZipFile(archive_path) as zf:
+        infolist = zf.infolist()
+    assert len(infolist) == 1
+    st_mode = infolist[0].external_attr >> 16
+    assert stat.S_ISREG(st_mode)
+    assert stat.S_IMODE(st_mode) == normalized_mode if reproducible else original_mode
 
 
 @pytest.fixture
