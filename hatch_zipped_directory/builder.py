@@ -52,10 +52,12 @@ class ZipArchive:
             self.zipfd.writestr(info, f.read())
 
     def write_file(self, path: str, data: bytes | str) -> None:
-        info = ZipInfo(os.fspath(self.root_path / path))
-        if self.ziptime:
-            info.date_time = self.ziptime
-        self.zipfd.writestr(info, data)
+        arcname = self.root_path / path
+        if self.ziptime is not None:
+            date_time = self.ziptime
+        else:
+            date_time = time.localtime(time.time())[:6]
+        self.zipfd.writestr(ZipInfo(os.fspath(arcname), date_time=date_time), data)
 
     @classmethod
     @contextmanager
