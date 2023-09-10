@@ -18,8 +18,10 @@ READ_SIZE = 65536
 def getsha256(filename) -> str:
     sha256 = hashlib.sha256()
     with open(filename, "rb") as f:
-        while data := f.read(READ_SIZE):
+        data = f.read(READ_SIZE)
+        while data:
             sha256.update(data)
+            data = f.read(READ_SIZE)
     return sha256.hexdigest()
 
 
