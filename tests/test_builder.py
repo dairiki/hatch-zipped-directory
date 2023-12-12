@@ -254,7 +254,7 @@ def test_ZippedDirectoryBuilder_build(builder, project_root, tmp_path, arcname_p
     dist_path = tmp_path / "dist"
     project_root.joinpath("test.txt").write_text("content")
 
-    artifacts = list(builder.build(os.fspath(dist_path)))
+    artifacts = list(builder.build(directory=os.fspath(dist_path)))
 
     assert len(artifacts) == 1
     artifact = Path(artifacts[0])
@@ -275,7 +275,7 @@ def test_ZippedDirectoryBuilder_reproducible(builder, project_root, tmp_path):
     test_file.write_text("content")
 
     def build() -> Path:
-        artifacts = list(builder.build(os.fspath(dist_path)))
+        artifacts = list(builder.build(directory=os.fspath(dist_path)))
         assert len(artifacts) == 1
         return Path(artifacts[0])
 

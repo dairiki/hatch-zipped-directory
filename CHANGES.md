@@ -1,5 +1,14 @@
 ## Changes
 
+### 0.1.0b5 (unreleased)
+
+#### Bitrot
+
+- Fix for hatchling 1.19 (hatch 1.8). `BuilderInterface.build`
+  arguments are now all kw-only. ([hatch/6c252f8])
+
+[hatch/6c252f8]: https://github.com/pypa/hatch/commit/6c252f8b8a65711846a6060c3d54f02936da2aa0)
+
 ### 0.1.0b4 (2023-09-10)
 
 #### Features
