@@ -8,7 +8,7 @@ authors = [
   { name = "Jeff Dairiki", email = "dairiki@dairiki.org" },
 ]
 classifiers = [
-  "Development Status :: 4 - Beta",
+  "Development Status :: 5 - Production/Stable",
   "Environment :: Plugins",
   "Framework :: Hatch",
   "Intended Audience :: Developers",
