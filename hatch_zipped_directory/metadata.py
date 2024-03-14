@@ -57,6 +57,7 @@ def metadata_to_json(metadata: str) -> dict[str, str | list[str]]:
     headers = email.message_from_string(metadata)
     assert not headers.is_multipart()
     description = headers.get_payload()
+    assert isinstance(description, str)
 
     data: dict[str, str | list[str]] = {}
     for key in headers:
