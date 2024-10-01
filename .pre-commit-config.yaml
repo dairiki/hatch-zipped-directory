@@ -2,7 +2,7 @@
 # See https://pre-commit.com/hooks.html for more hooks
 repos:
 - repo: https://github.com/pre-commit/pre-commit-hooks
-  rev: v4.4.0
+  rev: v4.6.0
   hooks:
     - id: check-yaml
     - id: check-toml
@@ -28,19 +28,19 @@ repos:
   - id: yesqa
 
 - repo: https://github.com/asottile/pyupgrade
-  rev: 'v3.10.1'
+  rev: 'v3.17.0'
   hooks:
     - id: pyupgrade
       args: ["--py37-plus"]
 
 - repo: https://github.com/asottile/reorder_python_imports
-  rev: v3.10.0
+  rev: v3.13.0
   hooks:
     - id: reorder-python-imports
       args: ["--py37-plus"]
 
 - repo: https://github.com/PyCQA/flake8
-  rev: '6.1.0'
+  rev: '7.1.1'
   hooks:
     - id: flake8
       language_version: python3
@@ -51,6 +51,6 @@ repos:
       - flake8-bugbear==23.7.10
 
 - repo: https://github.com/psf/black
-  rev: '23.9.0'
+  rev: '24.8.0'
   hooks:
     - id: black
