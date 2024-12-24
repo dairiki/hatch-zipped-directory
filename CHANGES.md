@@ -1,5 +1,11 @@
 ## Changes
 
+### 0.1.1 (unreleased)
+
+#### Bugs Fixed
+
+- (typing) `atomic_open` returns `io.BufferedRandom` (not `io.BufferedWriter`).
+
 ### 0.1.0 (2023-12-12)
 
 #### Bitrot
