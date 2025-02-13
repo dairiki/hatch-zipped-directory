@@ -3,7 +3,7 @@ import os
 import re
 import stat
 import time
-from pathlib import Path
+from pathlib import Path, PurePath
 from zipfile import ZipFile
 
 import pytest
@@ -76,9 +76,20 @@ def test_ZipArchive_add_file(tmp_path, reproducible, install_name, arcname_prefi
     ) as archive:
         archive.add_file(included_file)
 
-    assert zip_contents(archive_path) == {
+    expected_contents = {
         f"{arcname_prefix}bar": "content",
     }
+
+    directory_names = set()
+    for k in expected_contents.keys():
+        for parent in PurePath(k).parents:
+            if parent != PurePath("."):
+                directory_names.add(parent.as_posix() + "/")
+
+    for d in directory_names:
+        expected_contents[d] = ""
+
+    assert zip_contents(archive_path) == expected_contents
 
 
 @pytest.mark.parametrize(
@@ -264,10 +275,21 @@ def test_ZippedDirectoryBuilder_build(builder, project_root, tmp_path, arcname_p
     artifact = Path(artifacts[0])
     assert artifact.relative_to(dist_path) == Path("project_name-1.23.zip")
     contents = zip_contents(artifact)
-    assert set(contents) == {
+    expected_contents = {
         f"{arcname_prefix}test.txt",
         f"{arcname_prefix}METADATA.json",
     }
+
+    directory_names = set()
+    for k in expected_contents:
+        for parent in PurePath(k).parents:
+            if parent != PurePath("."):
+                directory_names.add(parent.as_posix() + "/")
+
+    for d in directory_names:
+        expected_contents.add(d)
+
+    assert set(contents) == expected_contents
     json_metadata = json.loads(contents[f"{arcname_prefix}METADATA.json"])
     assert json_metadata["version"] == "1.23"
 

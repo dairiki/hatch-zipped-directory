@@ -9,7 +9,7 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from functools import cached_property
 from pathlib import Path
-from pathlib import PurePosixPath
+from pathlib import PurePath
 from typing import Any
 from typing import Callable
 from zipfile import ZIP_DEFLATED
@@ -35,7 +35,7 @@ __all__ = ["ZippedDirectoryBuilder"]
 
 class ZipArchive:
     def __init__(self, zipfd: ZipFile, root_path: str, *, reproducible: bool = True):
-        self.root_path = PurePosixPath(root_path)
+        self.root_path = PurePath(root_path)
         self.zipfd = zipfd
         self.reproducible = reproducible
 
@@ -48,6 +48,10 @@ class ZipArchive:
             raise ValueError(  # no cov
                 "ZipArchive.add_file does not support adding directories"
             )
+
+        for parent_dir in reversed(arcname.parents[:-1]):
+            if (parent_dir.as_posix() + "/") not in self.zipfd.namelist():
+                self.zipfd.mkdir(parent_dir.as_posix())
 
         if self.reproducible:
             zinfo.date_time = self._reproducible_date_time
