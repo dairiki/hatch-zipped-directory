@@ -10,6 +10,10 @@
 
 - (typing) `atomic_open` returns `io.BufferedRandom` (not `io.BufferedWriter`).
 
+#### Tests
+
+- Test under python 3.14.
+
 ### 0.1.0 (2023-12-12)
 
 #### Bitrot
