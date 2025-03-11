@@ -3,15 +3,15 @@ from __future__ import annotations
 import json
 import os
 import shutil
-import sys
 import time
+from collections.abc import Iterable
+from collections.abc import Iterator
 from contextlib import contextmanager
+from functools import cached_property
 from pathlib import Path
 from pathlib import PurePosixPath
 from typing import Any
 from typing import Callable
-from typing import Iterable
-from typing import Iterator
 from zipfile import ZIP_DEFLATED
 from zipfile import ZipFile
 from zipfile import ZipInfo
@@ -28,11 +28,6 @@ from hatchling.metadata.spec import get_core_metadata_constructors
 
 from .metadata import metadata_to_json
 from .utils import atomic_write
-
-if sys.version_info >= (3, 8):  # no cov
-    from functools import cached_property as optionally_cached_property
-else:  # no cov
-    optionally_cached_property = property
 
 
 __all__ = ["ZippedDirectoryBuilder"]
@@ -80,7 +75,7 @@ class ZipArchive:
             with ZipFile(fp, "w", compression=ZIP_DEFLATED) as zipfd:
                 yield cls(zipfd, root_path, reproducible=reproducible)
 
-    @optionally_cached_property
+    @cached_property
     def _reproducible_date_time(self):
         return time.gmtime(get_reproducible_timestamp())[0:6]
 
