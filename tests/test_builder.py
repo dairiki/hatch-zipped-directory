@@ -3,7 +3,8 @@ import os
 import re
 import stat
 import time
-from pathlib import Path, PurePath
+from pathlib import Path
+from pathlib import PurePath
 from zipfile import ZipFile
 
 import pytest
@@ -69,9 +70,11 @@ def test_ZipArchive_add_file(tmp_path, reproducible, install_name, arcname_prefi
         if not path.parent.exists():
             path.parent.mkdir(parents=True)
         path.write_text("content")
-        included_files.append(IncludedFile(
-            os.fspath(tmp_path / relative_path), relative_path, distribution_path
-        ))
+        included_files.append(
+            IncludedFile(
+                os.fspath(tmp_path / relative_path), relative_path, distribution_path
+            )
+        )
 
     archive_path = tmp_path / "test.zip"
     with ZipArchive.open(
