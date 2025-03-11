@@ -49,9 +49,9 @@ class ZipArchive:
                 "ZipArchive.add_file does not support adding directories"
             )
 
-        for parent_dir in reversed(arcname.parents[:-1]):
+        for parent_dir in reversed(list(arcname.parents)[:-1]):
             if (parent_dir.as_posix() + "/") not in self.zipfd.namelist():
-                self.zipfd.mkdir(parent_dir.as_posix())
+                self.zipfd.writestr(parent_dir.as_posix() + "/", "")
 
         if self.reproducible:
             zinfo.date_time = self._reproducible_date_time
