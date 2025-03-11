@@ -2,6 +2,10 @@
 
 ### 0.1.1 (unreleased)
 
+#### Breaking Changes
+
+- Drop support for Python 3.7.
+
 #### Bugs Fixed
 
 - (typing) `atomic_open` returns `io.BufferedRandom` (not `io.BufferedWriter`).

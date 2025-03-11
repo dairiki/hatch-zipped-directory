@@ -1,7 +1,7 @@
 [project]
 name = "hatch-zipped-directory"
 description = 'A custom builder to build zipped directories'
-requires-python = ">=3.7"
+requires-python = ">=3.8"
 license = "MIT"
 keywords = ["hatch", "packaging"]
 authors = [
@@ -15,7 +15,6 @@ classifiers = [
   "License :: OSI Approved :: MIT License",
   "Programming Language :: Python",
   "Programming Language :: Python :: 3 :: Only",
-  "Programming Language :: Python :: 3.7",
   "Programming Language :: Python :: 3.8",
   "Programming Language :: Python :: 3.9",
   "Programming Language :: Python :: 3.10",
@@ -85,7 +84,7 @@ lint = [
 [tool.hatch.envs.test]
 extra-dependencies = []
 [[tool.hatch.envs.test.matrix]]
-python = ["37", "38", "39", "310", "311", "312", "313"]
+python = ["38", "39", "310", "311", "312", "313"]
 
 [tool.coverage.run]
 branch = true
