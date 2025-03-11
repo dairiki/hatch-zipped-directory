@@ -61,23 +61,28 @@ def test_ZipArchive_cleanup_on_error(tmp_path, reproducible):
     ],
 )
 def test_ZipArchive_add_file(tmp_path, reproducible, install_name, arcname_prefix):
-    relative_path = "src/foo"
-    path = tmp_path / relative_path
-    path.parent.mkdir(parents=True)
-    path.write_text("content")
-    distribution_path = "bar"
-    included_file = IncludedFile(
-        os.fspath(tmp_path / relative_path), relative_path, distribution_path
-    )
+    relative_paths = ["src/foo", "src/goo"]
+    distribution_paths = ["bar", "ber"]
+    included_files = []
+    for relative_path, distribution_path in zip(relative_paths, distribution_paths):
+        path = tmp_path / relative_path
+        if not path.parent.exists():
+            path.parent.mkdir(parents=True)
+        path.write_text("content")
+        included_files.append(IncludedFile(
+            os.fspath(tmp_path / relative_path), relative_path, distribution_path
+        ))
 
     archive_path = tmp_path / "test.zip"
     with ZipArchive.open(
         archive_path, install_name, reproducible=reproducible
     ) as archive:
-        archive.add_file(included_file)
+        for included_file in included_files:
+            archive.add_file(included_file)
 
     expected_contents = {
         f"{arcname_prefix}bar": "content",
+        f"{arcname_prefix}ber": "content",
     }
 
     directory_names = set()
