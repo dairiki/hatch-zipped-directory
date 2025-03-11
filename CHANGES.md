@@ -4,7 +4,7 @@
 
 #### Breaking Changes
 
-- Drop support for Python 3.7.
+- Drop support for Python 3.7 & 3.8.
 
 #### Bugs Fixed
 
