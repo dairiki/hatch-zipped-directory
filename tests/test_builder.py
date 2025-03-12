@@ -3,6 +3,7 @@ import os
 import re
 import stat
 import time
+from collections.abc import Iterable
 from pathlib import Path
 from pathlib import PurePosixPath
 from zipfile import ZipFile
@@ -22,6 +23,19 @@ def zip_contents(path):
         with zf.open(name) as fp:
             files[name] = fp.read().decode("utf-8")
     return files
+
+
+def _parent_paths(paths: Iterable[str]) -> set[str]:
+    """Compute all parent paths for the given paths.
+
+    Returns a set of all ancestor paths in zip format (with trailing slashes).
+    """
+    return {
+        f"{parent}/"
+        for path in paths
+        for parent in PurePosixPath(path).parents
+        if parent.name != ""
+    }
 
 
 @pytest.fixture(
@@ -84,14 +98,8 @@ def test_ZipArchive_add_file(tmp_path, reproducible, install_name, arcname_prefi
         for included_file in included_files:
             archive.add_file(included_file)
 
-    directory_names = set()
-    for k in expected_contents.keys():
-        for parent in PurePosixPath(k).parents:
-            if parent != PurePosixPath("."):
-                directory_names.add(parent.as_posix() + "/")
-
-    for d in directory_names:
-        expected_contents[d] = ""
+    for pp in _parent_paths(expected_contents):
+        expected_contents[pp] = ""
 
     assert zip_contents(archive_path) == expected_contents
 
@@ -284,14 +292,7 @@ def test_ZippedDirectoryBuilder_build(builder, project_root, tmp_path, arcname_p
         f"{arcname_prefix}METADATA.json",
     }
 
-    directory_names = set()
-    for k in expected_contents:
-        for parent in PurePosixPath(k).parents:
-            if parent != PurePosixPath("."):
-                directory_names.add(parent.as_posix() + "/")
-
-    for d in directory_names:
-        expected_contents.add(d)
+    expected_contents |= _parent_paths(expected_contents)
 
     assert set(contents) == expected_contents
     json_metadata = json.loads(contents[f"{arcname_prefix}METADATA.json"])
