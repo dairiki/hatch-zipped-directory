@@ -3,6 +3,7 @@ import os
 import re
 import stat
 import time
+from collections.abc import Iterable
 from pathlib import Path
 from zipfile import ZipFile
 
@@ -21,6 +22,19 @@ def zip_contents(path):
         with zf.open(name) as fp:
             files[name] = fp.read().decode("utf-8")
     return files
+
+
+def _parent_paths(paths: Iterable[str]) -> set[str]:
+    """Compute all parent paths for the given paths.
+
+    Returns a set of all ancestor paths in zip format (with trailing slashes).
+    """
+    return {
+        f"{parent}/"
+        for path in paths
+        for parent in Path(path).parents
+        if parent.name != ""
+    }
 
 
 @pytest.fixture(
@@ -61,24 +75,32 @@ def test_ZipArchive_cleanup_on_error(tmp_path, reproducible):
     ],
 )
 def test_ZipArchive_add_file(tmp_path, reproducible, install_name, arcname_prefix):
-    relative_path = "src/foo"
-    path = tmp_path / relative_path
-    path.parent.mkdir(parents=True)
-    path.write_text("content")
-    distribution_path = "bar"
-    included_file = IncludedFile(
-        os.fspath(tmp_path / relative_path), relative_path, distribution_path
-    )
+    relative_paths = ["src/foo", "src/goo"]
+    distribution_paths = ["bar", "ber"]
+    included_files = []
+    expected_contents = {}
+    for relative_path, distribution_path in zip(relative_paths, distribution_paths):
+        path = tmp_path / relative_path
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text("content")
+        included_files.append(
+            IncludedFile(
+                os.fspath(tmp_path / relative_path), relative_path, distribution_path
+            )
+        )
+        expected_contents[f"{arcname_prefix}{distribution_path}"] = "content"
 
     archive_path = tmp_path / "test.zip"
     with ZipArchive.open(
         archive_path, install_name, reproducible=reproducible
     ) as archive:
-        archive.add_file(included_file)
+        for included_file in included_files:
+            archive.add_file(included_file)
 
-    assert zip_contents(archive_path) == {
-        f"{arcname_prefix}bar": "content",
-    }
+    for pp in _parent_paths(expected_contents):
+        expected_contents[pp] = ""
+
+    assert zip_contents(archive_path) == expected_contents
 
 
 @pytest.mark.parametrize(
@@ -264,10 +286,14 @@ def test_ZippedDirectoryBuilder_build(builder, project_root, tmp_path, arcname_p
     artifact = Path(artifacts[0])
     assert artifact.relative_to(dist_path) == Path("project_name-1.23.zip")
     contents = zip_contents(artifact)
-    assert set(contents) == {
+    expected_contents = {
         f"{arcname_prefix}test.txt",
         f"{arcname_prefix}METADATA.json",
     }
+
+    expected_contents |= _parent_paths(expected_contents)
+
+    assert set(contents) == expected_contents
     json_metadata = json.loads(contents[f"{arcname_prefix}METADATA.json"])
     assert json_metadata["version"] == "1.23"
 
