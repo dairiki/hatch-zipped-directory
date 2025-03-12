@@ -65,16 +65,17 @@ def test_ZipArchive_add_file(tmp_path, reproducible, install_name, arcname_prefi
     relative_paths = ["src/foo", "src/goo"]
     distribution_paths = ["bar", "ber"]
     included_files = []
+    expected_contents = {}
     for relative_path, distribution_path in zip(relative_paths, distribution_paths):
         path = tmp_path / relative_path
-        if not path.parent.exists():
-            path.parent.mkdir(parents=True)
+        path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text("content")
         included_files.append(
             IncludedFile(
                 os.fspath(tmp_path / relative_path), relative_path, distribution_path
             )
         )
+        expected_contents[f"{arcname_prefix}{distribution_path}"] = "content"
 
     archive_path = tmp_path / "test.zip"
     with ZipArchive.open(
@@ -82,11 +83,6 @@ def test_ZipArchive_add_file(tmp_path, reproducible, install_name, arcname_prefi
     ) as archive:
         for included_file in included_files:
             archive.add_file(included_file)
-
-    expected_contents = {
-        f"{arcname_prefix}bar": "content",
-        f"{arcname_prefix}ber": "content",
-    }
 
     directory_names = set()
     for k in expected_contents.keys():
