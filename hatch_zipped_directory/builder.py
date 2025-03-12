@@ -9,6 +9,7 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from functools import cached_property
 from pathlib import Path
+from pathlib import PurePosixPath
 from typing import Any
 from typing import Callable
 from zipfile import ZIP_DEFLATED
@@ -34,7 +35,7 @@ __all__ = ["ZippedDirectoryBuilder"]
 
 class ZipArchive:
     def __init__(self, zipfd: ZipFile, root_path: str, *, reproducible: bool = True):
-        self.root_path = Path(root_path)
+        self.root_path = PurePosixPath(root_path)
         self.zipfd = zipfd
         self.reproducible = reproducible
 
