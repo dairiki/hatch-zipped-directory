@@ -5,7 +5,6 @@ import stat
 import time
 from collections.abc import Iterable
 from pathlib import Path
-from pathlib import PurePosixPath
 from zipfile import ZipFile
 
 import pytest
@@ -33,7 +32,7 @@ def _parent_paths(paths: Iterable[str]) -> set[str]:
     return {
         f"{parent}/"
         for path in paths
-        for parent in PurePosixPath(path).parents
+        for parent in Path(path).parents
         if parent.name != ""
     }
 
