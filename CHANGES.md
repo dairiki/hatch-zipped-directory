@@ -1,6 +1,12 @@
 ## Changes
 
-### 0.1.1 (unreleased)
+### 0.2.0 (2025-03-11)
+
+#### Features
+
+- Write parent directory entries to zip archive. Python requires this
+  when importing modules directly from a zip archive. ([#4] — thank
+  you @PolyPik)
 
 #### Breaking Changes
 
@@ -14,6 +20,8 @@
 
 - Test under python 3.14.
 - Test under windows.
+
+[#4]: https://github.com/dairiki/hatch-zipped-directory/pull/4
 
 ### 0.1.0 (2023-12-12)
 
