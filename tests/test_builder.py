@@ -4,7 +4,6 @@ import re
 import stat
 import time
 from pathlib import Path
-from pathlib import PurePath
 from zipfile import ZipFile
 
 import pytest
@@ -90,8 +89,8 @@ def test_ZipArchive_add_file(tmp_path, reproducible, install_name, arcname_prefi
 
     directory_names = set()
     for k in expected_contents.keys():
-        for parent in PurePath(k).parents:
-            if parent != PurePath("."):
+        for parent in Path(k).parents:
+            if parent != Path("."):
                 directory_names.add(parent.as_posix() + "/")
 
     for d in directory_names:
@@ -290,8 +289,8 @@ def test_ZippedDirectoryBuilder_build(builder, project_root, tmp_path, arcname_p
 
     directory_names = set()
     for k in expected_contents:
-        for parent in PurePath(k).parents:
-            if parent != PurePath("."):
+        for parent in Path(k).parents:
+            if parent != Path("."):
                 directory_names.add(parent.as_posix() + "/")
 
     for d in directory_names:
