@@ -152,6 +152,10 @@ def test_ZipArchive_file_modes(
 ) -> None:
     archive_path = tmp_path / "test.zip"
     src_path = tmp_path / "testfile"
+    if (original_mode & stat.S_IXUSR) != 0:
+        # make file "executable" on windows
+        src_path = src_path.with_suffix(".bat")
+
     src_path.touch()
     src_path.chmod(original_mode)
 
