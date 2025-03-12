@@ -1,0 +1,21 @@
+[build-system]
+requires = [
+    "hatchling",
+    "hatch-zipped-directory",
+]
+build-backend = "hatchling.build"
+
+[project]
+name = "demo"
+version = "0.42"
+description = 'test project'
+readme = "README.md"
+requires-python = ">=3.8"
+license = "MIT"
+dependencies = []
+
+
+[tool.hatch.build.targets.zipped-directory]
+install-name = "org.example.test"
+only-include = ["src"]
+sources = ["src"]
