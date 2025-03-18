@@ -32,9 +32,7 @@ jobs:
         allow-prereleases: true
 
     - name: Install hatch
-      run: |
-        python -m pip install --upgrade pip
-        pip install hatch hatch-vcs
+      uses: pypa/hatch@257e27e51a6a5616ed08a39a408a21c35c9931bc
 
     - run: hatch run full
 
@@ -56,10 +54,11 @@ jobs:
         path: ~/.cache/pre-commit
         key: py-${{ env.python-version }}-${{ hashFiles('.pre-commit-config.yaml') }}
 
-    - name: Install hatch, pre-commit
-      run: |
-        python -m pip install --upgrade pip
-        pip install hatch hatch-vcs pre-commit
+    - name: Install hatch
+      uses: pypa/hatch@257e27e51a6a5616ed08a39a408a21c35c9931bc
+
+    - name: Install pre-commit
+      run: python -m pip install pre-commit
 
     - name: Run mypy
       run: hatch run dev:mypy hatch_zipped_directory
@@ -81,9 +80,13 @@ jobs:
         with:
           python-version: 3.x
 
-      - run: python -m pip install --upgrade pip
-      - run: python -m pip install hatch hatch-vcs packaging
+      - name: Install hatch
+        uses: pypa/hatch@257e27e51a6a5616ed08a39a408a21c35c9931bc
+
+      - run: python -m pip install packaging
+
       - run: hatch build
+
       - uses: actions/upload-artifact@v4
         with:
           name: dist
