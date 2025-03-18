@@ -1,5 +1,12 @@
 ## Changes
 
+### 0.2.1 (unreleased)
+
+#### Tests Fixed
+
+- The functional test (`test_functional.py`) was testing the latest
+  version of our plugin from PyPI rather than from local source.
+
 ### 0.2.0 (2025-03-11)
 
 #### Features
