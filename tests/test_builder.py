@@ -139,6 +139,21 @@ def test_ZipArchive_reproducible_timestamps(tmp_path: Path) -> None:
     assert all(info.date_time == reproducible_ts for info in infolist)
 
 
+def test_ZipArchive_reproducible_directory_timestamps(tmp_path: Path) -> None:
+    archive_path = tmp_path / "test.zip"
+    src_path = tmp_path / "bar"
+    src_path.touch()
+
+    with ZipArchive.open(archive_path, root_path="", reproducible=True) as archive:
+        archive.add_file(IncludedFile(os.fspath(src_path), "subdir/bar", "subdir/bar"))
+
+    with ZipFile(archive_path) as zf:
+        infolist = zf.infolist()
+    assert len(infolist) == 2
+    reproducible_ts = (2020, 2, 2, 0, 0, 0)
+    assert all(info.date_time == reproducible_ts for info in infolist)
+
+
 def test_ZipArchive_copies_timestamps_if_not_reproducible(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
