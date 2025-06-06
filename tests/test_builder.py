@@ -145,11 +145,24 @@ def test_ZipArchive_reproducible_directory_timestamps(tmp_path: Path) -> None:
     src_path.touch()
 
     with ZipArchive.open(archive_path, root_path="", reproducible=True) as archive:
+        archive.add_file(IncludedFile(os.fspath(src_path), "bar", "bar"))
         archive.add_file(IncludedFile(os.fspath(src_path), "subdir/bar", "subdir/bar"))
+        archive.add_file(
+            IncludedFile(os.fspath(src_path), "sub/dir/bar", "sub/dir/bar")
+        )
 
     with ZipFile(archive_path) as zf:
         infolist = zf.infolist()
-    assert len(infolist) == 2
+
+    assert {info.filename for info in infolist} == {
+        "bar",
+        "subdir/",
+        "subdir/bar",
+        "sub/",
+        "sub/dir/",
+        "sub/dir/bar",
+    }
+
     reproducible_ts = (2020, 2, 2, 0, 0, 0)
     assert all(info.date_time == reproducible_ts for info in infolist)
 
@@ -174,6 +187,27 @@ def test_ZipArchive_copies_timestamps_if_not_reproducible(
         infolist = zf.infolist()
     assert len(infolist) == 2
     assert all(info.date_time == now_date_tuple for info in infolist)
+
+
+def test_ZipArchive_nonreproducible_directory_timestamps(tmp_path: Path) -> None:
+    archive_path = tmp_path / "test.zip"
+    src_path = tmp_path / "bar"
+    src_path.touch()
+
+    with ZipArchive.open(archive_path, root_path="", reproducible=False) as archive:
+        archive.add_file(IncludedFile(os.fspath(src_path), "subdir/bar", "subdir/bar"))
+
+    with ZipFile(archive_path) as zf:
+        infolist = zf.infolist()
+
+    assert {info.filename for info in infolist} == {"subdir/", "subdir/bar"}
+
+    reproducible_ts = (2020, 2, 2, 0, 0, 0)
+    assert all(
+        info.date_time != reproducible_ts
+        for info in infolist
+        if info.filename.endswith("/")
+    )
 
 
 @pytest.mark.parametrize(
