@@ -79,7 +79,11 @@ def demo_zipfile_path(demo_path):
     subprocess.run(
         [sys.executable, "-m", "hatch", "build", "--target", "zipped-directory"],
         cwd=demo_path,
-        env={**os.environ, "SETUPTOOLS_SCM_PRETEND_VERSION": "0.1a1"},
+        env={
+            **os.environ,
+            "SETUPTOOLS_SCM_PRETEND_VERSION": "0.1a1",
+            "HATCH_ENV_ACTIVE": "",
+        },
         check=True,
     )
     return demo_path / "dist/demo-0.42.zip"

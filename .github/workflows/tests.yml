@@ -36,11 +36,38 @@ jobs:
 
     - run: hatch run full
 
+    - uses: actions/upload-artifact@v4
+      with:
+          name: coverage-${{ matrix.python-version }}-${{ matrix.os }}
+          path: ".coverage.*"
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 1
+
+  cover:
+    name: Coverage
+    if: ${{ always() }}
+    needs: [tests]
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-python@v5
+      with:
+        python-version: "3.x"
+    - name: Install hatch
+      uses: pypa/hatch@257e27e51a6a5616ed08a39a408a21c35c9931bc
+    - uses: actions/download-artifact@v4
+      with:
+          pattern: coverage-*
+          merge-multiple: true
+    - run: hatch run coverage combine
+    - run: hatch run coverage report --fail-under 100 --show-missing
+
   lint:
     name: Lint
     runs-on: 'ubuntu-latest'
     env:
-      python-version: '3.11'
+      python-version: "3.13"
     steps:
     - uses: actions/checkout@v4
 
@@ -68,7 +95,7 @@ jobs:
 
   build:
     name: Build distribution
-    needs: [tests, lint]
+    needs: [tests, cover, lint]
     runs-on: ubuntu-latest
     outputs:
       version-type: ${{ steps.classify-version.outputs.version-type }}

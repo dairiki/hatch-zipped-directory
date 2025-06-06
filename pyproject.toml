@@ -55,19 +55,18 @@ include = [
 [tool.hatch.envs.default]
 dependencies = [
   "pytest",
-  "pytest-cov",
+  "coverage",
   "hatch",  # required by test_functional.py
 ]
 [tool.hatch.envs.default.scripts]
 full = [
     "pip freeze | paste -sd , -",
-    """pytest \
-        --cov-fail-under=100 \
-        --cov-report=term-missing \
-        --cov-config=pyproject.toml \
-        --cov=hatch_zipped_directory \
-        --cov=tests
-    """,
+    "coverage run -m pytest {args}",
+]
+cover = [
+    "hatch run test:full",
+    "hatch run coverage combine",
+    "hatch run coverage report --fail-under 100 --show-missing",
 ]
 
 [tool.hatch.envs.dev]
@@ -90,6 +89,17 @@ python = ["39", "310", "311", "312", "313", "314"]
 [tool.coverage.run]
 branch = true
 parallel = true
+
+[tool.coverage.paths]
+source = [
+    "hatch_zipped_directory/",
+    # Attempt to match source files on various GitHub Windows/macOS runners
+    "**/hatch_zipped_directory/",
+]
+tests = [
+    "tests/",
+    "**/hatch-zipped-directory/tests/",
+]
 
 [tool.coverage.report]
 exclude_lines = [
