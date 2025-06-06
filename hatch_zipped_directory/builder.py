@@ -2,7 +2,9 @@ from __future__ import annotations
 
 import json
 import os
+import posixpath
 import shutil
+import sys
 import time
 from collections.abc import Iterable
 from collections.abc import Iterator
@@ -48,9 +50,9 @@ class ZipArchive:
                 "ZipArchive.add_file does not support adding directories"
             )
 
-        for parent_dir in reversed(list(arcname.parents)[:-1]):
-            if (parent_dir.as_posix() + "/") not in self.zipfd.namelist():
-                self.zipfd.writestr(parent_dir.as_posix() + "/", "")
+        parent_dir = arcname.parent.as_posix()
+        if parent_dir != ".":
+            self._ensure_dir(parent_dir)
 
         if self.reproducible:
             zinfo.date_time = self._reproducible_date_time
@@ -81,6 +83,31 @@ class ZipArchive:
     @cached_property
     def _reproducible_date_time(self):
         return time.gmtime(get_reproducible_timestamp())[0:6]
+
+    def _ensure_dir(self, dirname: str, mode: int = 0o777) -> None:
+        zinfo = ZipInfo(dirname + "/")
+        if any(zi.filename == zinfo.filename for zi in self.zipfd.filelist):
+            return
+
+        parent = posixpath.dirname(dirname)
+        if parent:
+            self._ensure_dir(parent, mode=mode)
+
+        # Copied from zipfile.ZipFile.mkdir
+        # https://github.com/python/cpython/blob/f00512db20561370faad437853f6ecee0eec4856/Lib/zipfile/__init__.py#L2033-L2037
+        zinfo.compress_size = 0
+        zinfo.CRC = 0
+        zinfo.external_attr = ((0o40000 | mode) & 0xFFFF) << 16
+        zinfo.file_size = 0
+        zinfo.external_attr |= 0x10
+
+        if self.reproducible:
+            zinfo.date_time = self._reproducible_date_time
+
+        if sys.version_info < (3, 11):
+            self.zipfd.writestr(zinfo, "")
+        else:
+            self.zipfd.mkdir(zinfo)
 
 
 class ZippedDirectoryBuilderConfig(BuilderConfig):
