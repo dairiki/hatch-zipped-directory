@@ -1,3 +1,4 @@
+import hashlib
 import os
 import shutil
 import subprocess
@@ -73,14 +74,19 @@ def demo_path(tmp_path, plugin_uri):
     return project_path
 
 
-def test_build_demo(demo_path):
+@pytest.fixture
+def demo_zipfile_path(demo_path):
     subprocess.run(
         [sys.executable, "-m", "hatch", "build", "--target", "zipped-directory"],
         cwd=demo_path,
         env={**os.environ, "SETUPTOOLS_SCM_PRETEND_VERSION": "0.1a1"},
         check=True,
     )
-    with ZipFile(demo_path / "dist/demo-0.42.zip") as zf:
+    return demo_path / "dist/demo-0.42.zip"
+
+
+def test_build_demo(demo_zipfile_path):
+    with ZipFile(demo_zipfile_path) as zf:
         assert set(zf.namelist()) == {
             # from src/
             "org.example.test/code.py",
@@ -94,3 +100,9 @@ def test_build_demo(demo_path):
             "org.example.test/",
             "org.example.test/subdir/",
         }
+
+
+def test_demo_zipfile_hash(demo_zipfile_path):
+    with open(demo_zipfile_path, "rb") as fp:
+        zip_sha1 = hashlib.sha1(fp.read()).hexdigest()
+    assert zip_sha1 == "d720257ddf13e89d068fafde0ea920990d1d37a2"
