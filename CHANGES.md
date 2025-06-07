@@ -1,11 +1,23 @@
 ## Changes
 
-### 0.2.1 (unreleased)
+### 0.2.1 (2025-06-06)
+
+#### Bugs Fixed
+
+- Timestamps of parent directory entries are now set to the correct
+  magic value with reproducible builds are enabled. ([#5], [#6])
 
 #### Tests Fixed
 
 - The functional test (`test_functional.py`) was testing the latest
   version of our plugin from PyPI rather than from local source.
+
+- The CI tests appear to have been running whatever version of python
+  was compiled into the installed `hatch` binary, rather than the system
+  default python.
+
+[#5]: https://github.com/dairiki/hatch-zipped-directory/issues/5
+[#6]: https://github.com/dairiki/hatch-zipped-directory/pull/6
 
 ### 0.2.0 (2025-03-11)
 
