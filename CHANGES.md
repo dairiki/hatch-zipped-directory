@@ -4,6 +4,13 @@
 
 Drop support for python 3.9, test under python 3.15.
 
+#### Tests Fixed
+
+- Fix the functional test for `hatchling` == 1.32 which changes to
+  emitting core metadata version 2.5.  This results in a change to the
+  generated `METADATA.json`, and so a change to the SHA of the
+  generated zip archive.
+
 ### 0.2.1 (2025-06-06)
 
 #### Bugs Fixed
