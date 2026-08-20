@@ -119,3 +119,9 @@ def test_demo_zipfile_hash(demo_zipfile_path):
         pytest.xfail("hash differs on windows for undetermined reason")
 
     assert zip_sha1 == "8a54ccba3119e8700a121a872c40e934e883783f"
+
+
+def test_copy_demo_zipfile(demo_zipfile_path):
+    artifacts = Path("artifacts")
+    artifacts.mkdir(exist_ok=True)
+    shutil.copyfile(demo_zipfile_path, artifacts / demo_zipfile_path.name)
