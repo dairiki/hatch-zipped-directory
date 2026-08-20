@@ -1,5 +1,9 @@
 ## Changes
 
+### 0.3.0 (unreleased)
+
+Drop support for python 3.9, test under python 3.15.
+
 ### 0.2.1 (2025-06-06)
 
 #### Bugs Fixed
