@@ -32,7 +32,7 @@ def plugin_uri(tmp_path_factory, pytestconfig):
 PYPROJECT_TMPL = """
 [build-system]
 requires = [
-    "hatchling",
+    "hatchling>=1.32",
     "hatch-zipped-directory @ {plugin_uri}",
 ]
 build-backend = "hatchling.build"
@@ -114,8 +114,8 @@ def test_demo_zipfile_hash(demo_zipfile_path):
     # I haven't yet determined why.
     if (  # pragma: no cover
         sys.platform == "win32"
-        and zip_sha1 == "6f4c0a6c93d8c2beb7afe867258a74bdf631c162"
+        and zip_sha1 == "4070682225beb56de446ea785e748df07917998f"
     ):
         pytest.xfail("hash differs on windows for undetermined reason")
 
-    assert zip_sha1 == "d720257ddf13e89d068fafde0ea920990d1d37a2"
+    assert zip_sha1 == "8a54ccba3119e8700a121a872c40e934e883783f"
