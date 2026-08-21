@@ -59,6 +59,9 @@ class ZipArchive:
             # normalize mode (https://github.com/takluyver/flit/pull/66)
             st_mode = (zinfo.external_attr >> 16) & 0xFFFF
             set_zip_info_mode(zinfo, normalize_file_permissions(st_mode) & 0xFFFF)
+            # force upper byte of "version made by" to indicate creation by unix-y
+            # system
+            zinfo.create_system = 3
 
         with open(included_file.path, "rb") as src, self.zipfd.open(zinfo, "w") as dest:
             shutil.copyfileobj(src, dest, 8 * 1024)  # type: ignore[misc] # mypy #14975
