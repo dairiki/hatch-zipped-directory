@@ -70,9 +70,14 @@ class ZipArchive:
         arcname = self.root_path / path
         if self.reproducible:
             date_time = self._reproducible_date_time
+            zinfo = ZipInfo(os.fspath(arcname), date_time=date_time)
+            # force upper byte of "version made by" to indicate creation by unix-y
+            # system
+            zinfo.create_system = 3
         else:
             date_time = time.localtime(time.time())[:6]
-        self.zipfd.writestr(ZipInfo(os.fspath(arcname), date_time=date_time), data)
+            zinfo = ZipInfo(os.fspath(arcname), date_time=date_time)
+        self.zipfd.writestr(zinfo, data)
 
     @classmethod
     @contextmanager
@@ -106,6 +111,9 @@ class ZipArchive:
 
         if self.reproducible:
             zinfo.date_time = self._reproducible_date_time
+            # force upper byte of "version made by" to indicate creation by unix-y
+            # system
+            zinfo.create_system = 3
 
         if sys.version_info < (3, 11):
             self.zipfd.writestr(zinfo, "")
