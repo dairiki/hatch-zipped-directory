@@ -2,7 +2,7 @@
 # See https://pre-commit.com/hooks.html for more hooks
 repos:
 - repo: https://github.com/pre-commit/pre-commit-hooks
-  rev: v5.0.0
+  rev: v6.0.0
   hooks:
     - id: check-yaml
     - id: check-toml
@@ -15,42 +15,9 @@ repos:
     - id: end-of-file-fixer
     - id: mixed-line-ending
 
-- repo: https://github.com/pre-commit/pygrep-hooks
-  rev: 'v1.10.0'
+- repo: https://github.com/astral-sh/ruff-pre-commit
+  rev: v0.16.4
   hooks:
-    - id: python-check-blanket-noqa
-    - id: python-check-blanket-type-ignore
-    - id: python-use-type-annotations
-
-- repo: https://github.com/asottile/yesqa
-  rev: v1.5.0
-  hooks:
-  - id: yesqa
-
-- repo: https://github.com/asottile/pyupgrade
-  rev: 'v3.19.1'
-  hooks:
-    - id: pyupgrade
-      args: ["--py39-plus"]
-
-- repo: https://github.com/asottile/reorder_python_imports
-  rev: v3.14.0
-  hooks:
-    - id: reorder-python-imports
-      args: ["--py39-plus"]
-
-- repo: https://github.com/PyCQA/flake8
-  rev: '7.1.2'
-  hooks:
-    - id: flake8
-      language_version: python3
-      additional_dependencies:
-      # NOTE: autoupdate does not pick up flake8-bugbear since it is a
-      # transitive dependency. Make sure to update flake8-bugbear
-      # manually on a regular basis.
-      - flake8-bugbear==24.12.12
-
-- repo: https://github.com/psf/black
-  rev: '25.1.0'
-  hooks:
-    - id: black
+    - id: ruff-check
+      args: [ --fix ]
+    - id: ruff-format
