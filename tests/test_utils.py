@@ -16,7 +16,7 @@ def test_atomic_write(tmp_path):
 def test_atomic_write_failure(tmp_path):
     dst = tmp_path / "testfile.txt"
 
-    with pytest.raises(RuntimeError):
+    with pytest.raises(RuntimeError):  # noqa: SIM117
         with atomic_write(dst) as fp:
             fp.write(b"data")
             raise RuntimeError()
@@ -38,7 +38,7 @@ def test_atomic_write_replace_failure(tmp_path):
     dst = tmp_path / "testfile.txt"
     dst.write_bytes(b"orig")
 
-    with pytest.raises(RuntimeError):
+    with pytest.raises(RuntimeError):  # noqa: SIM117
         with atomic_write(dst) as fp:
             fp.write(b"data")
             raise RuntimeError("test")

@@ -11,5 +11,5 @@ class ReadmeMetadataHook(MetadataHookInterface):
 
         metadata["readme"] = {
             "content-type": "text/markdown",
-            "text": "\n".join([readme, "\n", changes, ""]),
+            "text": f"{readme}\n\n\n{changes}\n",
         }
