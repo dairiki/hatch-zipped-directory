@@ -98,7 +98,9 @@ By default, this plugin attempts to build [reproducible][reproducible
 builds] archives by setting the timestamps of the zip entries to a
 fixed value. When building in reproducible mode, the UNIX file modes
 of the archive entries is also normalized (to either 0644 or 0755
-depending on whether the file is executable.)
+depending on whether the file is executable).  As well, in
+reproducible mode, the _"create system"_ flag in the zip file headers
+are forced to _Unix_, even when running under Windows.
 
 The timestamp used for reproducible builds may be configured by
 setting the `SOURCE_DATE_EPOCH` environment variable.

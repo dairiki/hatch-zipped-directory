@@ -109,13 +109,4 @@ def test_build_demo(demo_zipfile_path):
 def test_demo_zipfile_hash(demo_zipfile_path):
     with open(demo_zipfile_path, "rb") as fp:
         zip_sha1 = hashlib.sha1(fp.read()).hexdigest()
-
-    # FIXME: On windows hash appears to come out different.
-    # I haven't yet determined why.
-    if (  # pragma: no cover
-        sys.platform == "win32"
-        and zip_sha1 == "4070682225beb56de446ea785e748df07917998f"
-    ):
-        pytest.xfail("hash differs on windows for undetermined reason")
-
     assert zip_sha1 == "8a54ccba3119e8700a121a872c40e934e883783f"

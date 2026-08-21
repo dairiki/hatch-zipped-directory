@@ -33,6 +33,8 @@ from .utils import atomic_write
 
 __all__ = ["ZippedDirectoryBuilder"]
 
+_CREATE_SYSTEM_UNIX = 3
+
 
 class ZipArchive:
     def __init__(self, zipfd: ZipFile, root_path: str, *, reproducible: bool = True):
@@ -59,6 +61,7 @@ class ZipArchive:
             # normalize mode (https://github.com/takluyver/flit/pull/66)
             st_mode = (zinfo.external_attr >> 16) & 0xFFFF
             set_zip_info_mode(zinfo, normalize_file_permissions(st_mode) & 0xFFFF)
+            zinfo.create_system = _CREATE_SYSTEM_UNIX  # force on Windows
 
         with open(included_file.path, "rb") as src, self.zipfd.open(zinfo, "w") as dest:
             shutil.copyfileobj(src, dest, 8 * 1024)  # type: ignore[misc] # mypy #14975
@@ -66,10 +69,13 @@ class ZipArchive:
     def write_file(self, path: str, data: bytes | str) -> None:
         arcname = self.root_path / path
         if self.reproducible:
-            date_time = self._reproducible_date_time
+            zinfo = ZipInfo(os.fspath(arcname), date_time=self._reproducible_date_time)
+            zinfo.create_system = _CREATE_SYSTEM_UNIX  # force on Windows
         else:
-            date_time = time.localtime(time.time())[:6]
-        self.zipfd.writestr(ZipInfo(os.fspath(arcname), date_time=date_time), data)
+            zinfo = ZipInfo(
+                os.fspath(arcname), date_time=time.localtime(time.time())[:6]
+            )
+        self.zipfd.writestr(zinfo, data)
 
     @classmethod
     @contextmanager
@@ -103,6 +109,7 @@ class ZipArchive:
 
         if self.reproducible:
             zinfo.date_time = self._reproducible_date_time
+            zinfo.create_system = _CREATE_SYSTEM_UNIX  # force on Windows
 
         if sys.version_info < (3, 11):
             self.zipfd.writestr(zinfo, "")
