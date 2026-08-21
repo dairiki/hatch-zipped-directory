@@ -11,8 +11,7 @@ import pytest
 from hatchling.builders.plugin.interface import IncludedFile
 from hatchling.metadata.core import ProjectMetadata
 
-from hatch_zipped_directory.builder import ZipArchive
-from hatch_zipped_directory.builder import ZippedDirectoryBuilder
+from hatch_zipped_directory.builder import ZipArchive, ZippedDirectoryBuilder
 
 
 def zip_contents(path):
@@ -50,7 +49,7 @@ def reproducible(request: pytest.FixtureRequest) -> bool:
 def test_ZipArchive_cleanup_on_error_in_init(tmp_path, monkeypatch, reproducible):
     monkeypatch.delattr("hatch_zipped_directory.builder.ZipFile")
 
-    with pytest.raises(NameError):
+    with pytest.raises(NameError):  # noqa: SIM117
         with ZipArchive.open(
             tmp_path / "test.zip", "install_name", reproducible=reproducible
         ):
@@ -60,7 +59,7 @@ def test_ZipArchive_cleanup_on_error_in_init(tmp_path, monkeypatch, reproducible
 
 def test_ZipArchive_cleanup_on_error(tmp_path, reproducible):
     archive_path = tmp_path / "test.zip"
-    with pytest.raises(RuntimeError):
+    with pytest.raises(RuntimeError):  # noqa: SIM117
         with ZipArchive.open(archive_path, "install_name", reproducible=reproducible):
             raise RuntimeError("test")
     assert len(list(tmp_path.iterdir())) == 0

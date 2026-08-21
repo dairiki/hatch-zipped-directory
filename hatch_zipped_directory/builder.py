@@ -6,30 +6,28 @@ import posixpath
 import shutil
 import sys
 import time
-from collections.abc import Iterable
-from collections.abc import Iterator
+from collections.abc import Callable, Iterable, Iterator
 from contextlib import contextmanager
 from functools import cached_property
 from pathlib import Path
 from typing import Any
-from typing import Callable
-from zipfile import ZIP_DEFLATED
-from zipfile import ZipFile
-from zipfile import ZipInfo
+from zipfile import ZIP_DEFLATED, ZipFile, ZipInfo
 
 from hatchling.builders.config import BuilderConfig
-from hatchling.builders.plugin.interface import BuilderInterface
-from hatchling.builders.plugin.interface import IncludedFile
-from hatchling.builders.utils import get_reproducible_timestamp
-from hatchling.builders.utils import normalize_file_permissions
-from hatchling.builders.utils import normalize_relative_path
-from hatchling.builders.utils import set_zip_info_mode
-from hatchling.metadata.spec import DEFAULT_METADATA_VERSION
-from hatchling.metadata.spec import get_core_metadata_constructors
+from hatchling.builders.plugin.interface import BuilderInterface, IncludedFile
+from hatchling.builders.utils import (
+    get_reproducible_timestamp,
+    normalize_file_permissions,
+    normalize_relative_path,
+    set_zip_info_mode,
+)
+from hatchling.metadata.spec import (
+    DEFAULT_METADATA_VERSION,
+    get_core_metadata_constructors,
+)
 
 from .metadata import metadata_to_json
 from .utils import atomic_write
-
 
 __all__ = ["ZippedDirectoryBuilder"]
 
@@ -82,9 +80,11 @@ class ZipArchive:
     def open(
         cls, dst: str | os.PathLike[str], root_path: str, *, reproducible: bool = True
     ) -> Iterator[ZipArchive]:
-        with atomic_write(dst) as fp:
-            with ZipFile(fp, "w", compression=ZIP_DEFLATED) as zipfd:
-                yield cls(zipfd, root_path, reproducible=reproducible)
+        with (
+            atomic_write(dst) as fp,
+            ZipFile(fp, "w", compression=ZIP_DEFLATED) as zipfd,
+        ):
+            yield cls(zipfd, root_path, reproducible=reproducible)
 
     @cached_property
     def _reproducible_date_time(self):
@@ -133,7 +133,7 @@ class ZippedDirectoryBuilderConfig(BuilderConfig):
             raise ValueError(
                 f"Unknown metadata version `{core_metadata_version}` for field "
                 f"`tool.hatch.build.targets.{self.plugin_name}.core-metadata-version`. "
-                f'Available: {", ".join(sorted(constructors))}'
+                f"Available: {', '.join(sorted(constructors))}"
             )
         return constructors[core_metadata_version]
 
