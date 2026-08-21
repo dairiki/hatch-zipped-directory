@@ -71,13 +71,12 @@ cover = [
 
 [tool.hatch.envs.dev]
 extra-dependencies = [
-  "flake8",
-  "flake8-bugbear",
+  "ruff",
   "mypy",
 ]
 [tool.hatch.envs.dev.scripts]
 lint = [
-    "flake8 {args:.}",
+    "ruff check {args:.}",
     "mypy {args:hatch_zipped_directory}",
 ]
 
@@ -106,4 +105,11 @@ exclude_lines = [
   "no cov",
   "if __name__ == .__main__.:",
   "if TYPE_CHECKING:",
+]
+
+[tool.ruff]
+[tool.ruff.lint]
+extend-select = [
+  "UP",
+  "FURB",
 ]
