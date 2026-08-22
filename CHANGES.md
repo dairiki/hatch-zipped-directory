@@ -1,16 +1,16 @@
-## Changes
+# Changes
 
-### 0.3.0 (unreleased)
+## 0.3.0 (unreleased)
 
 Drop support for python 3.9, test under python 3.15.
 
-#### Bugs Fixed
+### Bugs Fixed
 
 - When running in reproducible mode (the default), force the "create system"
   flag to "unix" in the zip archive file headers, in order to create bit-wise
   identical results regardless of OS. Fixes [#7].
 
-#### Tests Fixed
+### Tests Fixed
 
 - Fix the functional test for `hatchling` == 1.32 which changes to
   emitting core metadata version 2.5.  This results in a change to the
@@ -19,14 +19,14 @@ Drop support for python 3.9, test under python 3.15.
 
 [#7]: https://github.com/dairiki/hatch-zipped-directory/issues/7
 
-### 0.2.1 (2025-06-06)
+## 0.2.1 (2025-06-06)
 
-#### Bugs Fixed
+### Bugs Fixed
 
 - Timestamps of parent directory entries are now set to the correct
   magic value with reproducible builds are enabled. ([#5], [#6])
 
-#### Tests Fixed
+### Tests Fixed
 
 - The functional test (`test_functional.py`) was testing the latest
   version of our plugin from PyPI rather than from local source.
@@ -38,41 +38,41 @@ Drop support for python 3.9, test under python 3.15.
 [#5]: https://github.com/dairiki/hatch-zipped-directory/issues/5
 [#6]: https://github.com/dairiki/hatch-zipped-directory/pull/6
 
-### 0.2.0 (2025-03-11)
+## 0.2.0 (2025-03-11)
 
-#### Features
+### Features
 
 - Write parent directory entries to zip archive. Python requires this
   when importing modules directly from a zip archive. ([#4] — thank
   you @PolyPik)
 
-#### Breaking Changes
+### Breaking Changes
 
 - Drop support for Python 3.7 & 3.8.
 
-#### Bugs Fixed
+### Bugs Fixed
 
 - (typing) `atomic_open` returns `io.BufferedRandom` (not `io.BufferedWriter`).
 
-#### Tests
+### Tests
 
 - Test under python 3.14.
 - Test under windows.
 
 [#4]: https://github.com/dairiki/hatch-zipped-directory/pull/4
 
-### 0.1.0 (2023-12-12)
+## 0.1.0 (2023-12-12)
 
-#### Bitrot
+### Bitrot
 
 - Fix for hatchling 1.19 (hatch 1.8). `BuilderInterface.build`
   arguments are now all kw-only. ([hatch/6c252f8])
 
 [hatch/6c252f8]: https://github.com/pypa/hatch/commit/6c252f8b8a65711846a6060c3d54f02936da2aa0)
 
-### 0.1.0b4 (2023-09-10)
+## 0.1.0b4 (2023-09-10)
 
-#### Features
+### Features
 
 - Add support for [reproducible builds] which are now enabled by
   default. When enabled, timestamps in the zip archive are set to a
@@ -84,9 +84,9 @@ Drop support for python 3.9, test under python 3.15.
 [reproducible builds]: https://hatch.pypa.io/latest/config/build/#reproducible-builds
 [mode-normalization]: https://github.com/pypa/flit/pull/66
 
-### 0.1.0b3 (2023-05-10)
+## 0.1.0b3 (2023-05-10)
 
-#### Features
+### Features
 
 - Refactor JSON metadata code. Now we use `hatchling` to generate
   conventionall RFC 822-formatted distribution metadata, then convert
@@ -96,24 +96,24 @@ Drop support for python 3.9, test under python 3.15.
   *Metadata-Version* by setting
   `tool.hatch.build.targets.zipped-directory.core-metadata-version`.
 
-#### Tests
+### Tests
 
 - We now have 100% test coverage.
 
-### 0.1.0b2 (2023-01-10)
+## 0.1.0b2 (2023-01-10)
 
-#### Features
+### Features
 
 - The prefixing of file names under a top-level directory in the zip
   archive can now be disabled by setting `install-name = ""`.
   Thank you @gwerbin([#1][])
 
-#### Bugs
+### Bugs
 
 - Use explicit encoding in hatch metadata hook (for Windows).
 
 [#1]: https://github.com/dairiki/hatch-zipped-directory/issues/1
 
-### 0.1.0b1 (2022-10-07)
+## 0.1.0b1 (2022-10-07)
 
 Initial release.

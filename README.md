@@ -109,6 +109,12 @@ Reproducible builds may be disabled by setting `reproducible = false`
 in an appropriate section of `pyproject.toml` or `hatch.toml`.  See
 Hatch’s documentation on [Build Configuration] for details.
 
+## Change History
+
+A [change log][CHANGES.md] is maintained in our [GitHub repository][repo].
+
+[CHANGES.md]: https://github.com/dairiki/hatch-zipped-directory/blob/master/CHANGES.md (CHANGES.md in the GitHub master branch)
+[repo]: https://github.com/dairiki/hatch-zipped-directory
 
 ## Author
 
