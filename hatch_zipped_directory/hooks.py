@@ -4,5 +4,5 @@ from .builder import ZippedDirectoryBuilder
 
 
 @hookimpl
-def hatch_register_builder():
+def hatch_register_builder() -> type[ZippedDirectoryBuilder]:
     return ZippedDirectoryBuilder

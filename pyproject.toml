@@ -120,3 +120,7 @@ extend-select = [
   "UP",
   "FURB",
 ]
+
+[tool.mypy]
+files = ["hatch_zipped_directory/**.py", "tests/**.py"]
+strict = true

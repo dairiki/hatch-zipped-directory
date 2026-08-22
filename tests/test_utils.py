@@ -1,9 +1,11 @@
+from pathlib import Path
+
 import pytest
 
 from hatch_zipped_directory.utils import atomic_write
 
 
-def test_atomic_write(tmp_path):
+def test_atomic_write(tmp_path: Path) -> None:
     dst = tmp_path / "testfile.txt"
 
     with atomic_write(dst) as fp:
@@ -13,7 +15,7 @@ def test_atomic_write(tmp_path):
     assert set(tmp_path.iterdir()) == {dst}
 
 
-def test_atomic_write_failure(tmp_path):
+def test_atomic_write_failure(tmp_path: Path) -> None:
     dst = tmp_path / "testfile.txt"
 
     with pytest.raises(RuntimeError):  # noqa: SIM117
@@ -23,7 +25,7 @@ def test_atomic_write_failure(tmp_path):
     assert set(tmp_path.iterdir()) == set()
 
 
-def test_atomic_write_replace(tmp_path):
+def test_atomic_write_replace(tmp_path: Path) -> None:
     dst = tmp_path / "testfile.txt"
     dst.write_bytes(b"orig")
 
@@ -34,7 +36,7 @@ def test_atomic_write_replace(tmp_path):
     assert set(tmp_path.iterdir()) == {dst}
 
 
-def test_atomic_write_replace_failure(tmp_path):
+def test_atomic_write_replace_failure(tmp_path: Path) -> None:
     dst = tmp_path / "testfile.txt"
     dst.write_bytes(b"orig")
 

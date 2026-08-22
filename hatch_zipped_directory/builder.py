@@ -10,7 +10,7 @@ from collections.abc import Callable, Iterable, Iterator
 from contextlib import contextmanager
 from functools import cached_property
 from pathlib import Path
-from typing import Any
+from typing import Any, Generic, Protocol
 from zipfile import ZIP_DEFLATED, ZipFile, ZipInfo
 
 from hatchling.builders.config import BuilderConfig
@@ -21,10 +21,12 @@ from hatchling.builders.utils import (
     normalize_relative_path,
     set_zip_info_mode,
 )
+from hatchling.metadata.core import ProjectMetadata
 from hatchling.metadata.spec import (
     DEFAULT_METADATA_VERSION,
     get_core_metadata_constructors,
 )
+from hatchling.plugin.manager import PluginManager, PluginManagerBound
 
 from .metadata import metadata_to_json
 from .utils import atomic_write
@@ -62,7 +64,7 @@ class ZipArchive:
             zinfo.create_system = _CREATE_SYSTEM_UNIX  # force on Windows
 
         with open(included_file.path, "rb") as src, self.zipfd.open(zinfo, "w") as dest:
-            shutil.copyfileobj(src, dest, 8 * 1024)  # type: ignore[misc] # mypy #14975
+            shutil.copyfileobj(src, dest, 8 * 1024)
 
     def write_file(self, path: str, data: bytes | str) -> None:
         arcname = self.root_path / path
@@ -87,7 +89,7 @@ class ZipArchive:
             yield cls(zipfd, root_path, reproducible=reproducible)
 
     @cached_property
-    def _reproducible_date_time(self):
+    def _reproducible_date_time(self) -> tuple[int, int, int, int, int, int]:
         return time.gmtime(get_reproducible_timestamp())[0:6]
 
     def _ensure_dir(self, dirname: str, mode: int = 0o777) -> None:
@@ -117,9 +119,17 @@ class ZipArchive:
             self.zipfd.mkdir(zinfo)
 
 
+class CoreMetadataConstructor(Protocol, Generic[PluginManagerBound]):  # no cover
+    def __call__(
+        self,
+        metadata: ProjectMetadata[PluginManagerBound],
+        extra_dependencies: tuple[str, ...] | None = None,
+    ) -> str: ...
+
+
 class ZippedDirectoryBuilderConfig(BuilderConfig):
     @property
-    def core_metadata_constructor(self):
+    def core_metadata_constructor(self) -> CoreMetadataConstructor[PluginManager]:
         core_metadata_version = self.target_config.get(
             "core-metadata-version", DEFAULT_METADATA_VERSION
         )
@@ -138,11 +148,13 @@ class ZippedDirectoryBuilderConfig(BuilderConfig):
         return constructors[core_metadata_version]
 
 
-class ZippedDirectoryBuilder(BuilderInterface):
+class ZippedDirectoryBuilder(
+    BuilderInterface[ZippedDirectoryBuilderConfig, PluginManager]
+):
     PLUGIN_NAME = "zipped-directory"
 
     @classmethod
-    def get_config_class(cls):
+    def get_config_class(cls) -> type[ZippedDirectoryBuilderConfig]:
         return ZippedDirectoryBuilderConfig
 
     def get_version_api(self) -> dict[str, Callable[..., str]]:

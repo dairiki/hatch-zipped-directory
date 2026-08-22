@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import json
 import os
 import re
@@ -5,16 +7,21 @@ import stat
 import time
 from collections.abc import Iterable
 from pathlib import Path
+from typing import TYPE_CHECKING
 from zipfile import ZipFile
 
 import pytest
 from hatchling.builders.plugin.interface import IncludedFile
 from hatchling.metadata.core import ProjectMetadata
+from hatchling.plugin.manager import PluginManager
 
 from hatch_zipped_directory.builder import ZipArchive, ZippedDirectoryBuilder
 
+if TYPE_CHECKING:
+    from _typeshed import StrPath
 
-def zip_contents(path):
+
+def zip_contents(path: StrPath) -> dict[str, str]:
     zf = ZipFile(path)
     files = {}
     for name in zf.namelist():
@@ -43,10 +50,12 @@ def _parent_paths(paths: Iterable[str]) -> set[str]:
     ]
 )
 def reproducible(request: pytest.FixtureRequest) -> bool:
-    return request.param
+    return request.param  # type: ignore[no-any-return]
 
 
-def test_ZipArchive_cleanup_on_error_in_init(tmp_path, monkeypatch, reproducible):
+def test_ZipArchive_cleanup_on_error_in_init(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, reproducible: bool
+) -> None:
     monkeypatch.delattr("hatch_zipped_directory.builder.ZipFile")
 
     with pytest.raises(NameError):  # noqa: SIM117
@@ -57,7 +66,7 @@ def test_ZipArchive_cleanup_on_error_in_init(tmp_path, monkeypatch, reproducible
     assert len(list(tmp_path.iterdir())) == 0
 
 
-def test_ZipArchive_cleanup_on_error(tmp_path, reproducible):
+def test_ZipArchive_cleanup_on_error(tmp_path: Path, reproducible: bool) -> None:
     archive_path = tmp_path / "test.zip"
     with pytest.raises(RuntimeError):  # noqa: SIM117
         with ZipArchive.open(archive_path, "install_name", reproducible=reproducible):
@@ -73,7 +82,9 @@ def test_ZipArchive_cleanup_on_error(tmp_path, reproducible):
         (".", ""),
     ],
 )
-def test_ZipArchive_add_file(tmp_path, reproducible, install_name, arcname_prefix):
+def test_ZipArchive_add_file(
+    tmp_path: Path, reproducible: bool, install_name: str, arcname_prefix: str
+) -> None:
     relative_paths = ["src/foo", "src/goo"]
     distribution_paths = ["bar", "ber"]
     included_files = []
@@ -110,7 +121,9 @@ def test_ZipArchive_add_file(tmp_path, reproducible, install_name, arcname_prefi
         (".", ""),
     ],
 )
-def test_ZipArchive_write_file(tmp_path, reproducible, install_name, arcname_prefix):
+def test_ZipArchive_write_file(
+    tmp_path: Path, reproducible: bool, install_name: str, arcname_prefix: str
+) -> None:
     archive_path = tmp_path / "test.zip"
     with ZipArchive.open(
         archive_path, install_name, reproducible=reproducible
@@ -243,14 +256,14 @@ def test_ZipArchive_file_modes(
 
 
 @pytest.fixture
-def project_root(tmp_path):
+def project_root(tmp_path: Path) -> Path:
     root_path = tmp_path / "root"
     root_path.mkdir()
     return root_path
 
 
 @pytest.fixture
-def project_config():
+def project_config() -> dict[str, str]:
     return {
         "name": "project-name",
         "version": "1.23",
@@ -258,14 +271,16 @@ def project_config():
 
 
 @pytest.fixture
-def target_config():
+def target_config() -> dict[str, str]:
     return {
         "install-name": "org.example.project",
     }
 
 
 @pytest.fixture
-def project_metadata(project_config, target_config, project_root):
+def project_metadata(
+    project_config: dict[str, str], target_config: dict[str, str], project_root: Path
+) -> ProjectMetadata[PluginManager]:
     hatch_config = {
         "build": {
             "targets": {
@@ -279,33 +294,41 @@ def project_metadata(project_config, target_config, project_root):
             "hatch": hatch_config,
         },
     }
-    return ProjectMetadata(project_root, None, config=config)
+    return ProjectMetadata(str(project_root), None, config=config)
 
 
 @pytest.fixture
-def builder(project_root, project_metadata):
-    return ZippedDirectoryBuilder(project_root, metadata=project_metadata)
+def builder(
+    project_root: Path, project_metadata: ProjectMetadata[PluginManager]
+) -> ZippedDirectoryBuilder:
+    return ZippedDirectoryBuilder(str(project_root), metadata=project_metadata)
 
 
 @pytest.mark.parametrize("target_config", [{"core-metadata-version": "2.2"}])
-def test_config_core_metadata_constructor(builder):
+def test_config_core_metadata_constructor(builder: ZippedDirectoryBuilder) -> None:
     metadata = builder.config.core_metadata_constructor(builder.metadata)
     assert re.search(r"(?im)^Metadata-Version: 2.2$", metadata)
 
 
 @pytest.mark.parametrize("target_config", [{"core-metadata-version": None}])
-def test_config_core_metadata_constructor_type_error(builder):
+def test_config_core_metadata_constructor_type_error(
+    builder: ZippedDirectoryBuilder,
+) -> None:
     with pytest.raises(TypeError, match="must be a string"):
         builder.config.core_metadata_constructor(builder.metadata)
 
 
 @pytest.mark.parametrize("target_config", [{"core-metadata-version": "42.203"}])
-def test_config_core_metadata_constructor_value_error(builder):
+def test_config_core_metadata_constructor_value_error(
+    builder: ZippedDirectoryBuilder,
+) -> None:
     with pytest.raises(ValueError, match="(?i)unknown metadata version"):
         builder.config.core_metadata_constructor(builder.metadata)
 
 
-def test_ZippedDirectoryBuilder_clean(builder, tmp_path):
+def test_ZippedDirectoryBuilder_clean(
+    builder: ZippedDirectoryBuilder, tmp_path: Path
+) -> None:
     dist_path = tmp_path / "dist"
     dist_path.mkdir()
     dist_path.joinpath("foo.whl").touch()
@@ -324,7 +347,12 @@ def test_ZippedDirectoryBuilder_clean(builder, tmp_path):
         ({"install-name": ""}, ""),
     ],
 )
-def test_ZippedDirectoryBuilder_build(builder, project_root, tmp_path, arcname_prefix):
+def test_ZippedDirectoryBuilder_build(
+    builder: ZippedDirectoryBuilder,
+    project_root: Path,
+    tmp_path: Path,
+    arcname_prefix: str,
+) -> None:
     dist_path = tmp_path / "dist"
     project_root.joinpath("test.txt").write_text("content")
 
@@ -347,7 +375,9 @@ def test_ZippedDirectoryBuilder_build(builder, project_root, tmp_path, arcname_p
 
 
 @pytest.mark.parametrize("target_config", [{"reproducible": True}])
-def test_ZippedDirectoryBuilder_reproducible(builder, project_root, tmp_path):
+def test_ZippedDirectoryBuilder_reproducible(
+    builder: ZippedDirectoryBuilder, project_root: Path, tmp_path: Path
+) -> None:
     dist_path = tmp_path / "dist"
     test_file = project_root.joinpath("test.txt")
     test_file.write_text("content")
@@ -374,7 +404,9 @@ def test_ZippedDirectoryBuilder_reproducible(builder, project_root, tmp_path):
         ({}, "project_name"),
     ],
 )
-def test_ZippedDirectoryBuilder_build_data_install_name(builder, install_name):
+def test_ZippedDirectoryBuilder_build_data_install_name(
+    builder: ZippedDirectoryBuilder, install_name: str
+) -> None:
     build_data = builder.get_default_build_data()
     assert build_data["install_name"] == install_name
     assert build_data["force_include"] == {}
@@ -386,7 +418,9 @@ def test_ZippedDirectoryBuilder_build_data_install_name(builder, install_name):
         {"readme": "README.txt"},
     ],
 )
-def test_ZippedDirectoryBuilder_build_data_includes_readme(project_root, builder):
+def test_ZippedDirectoryBuilder_build_data_includes_readme(
+    project_root: Path, builder: ZippedDirectoryBuilder
+) -> None:
     project_root.joinpath("README.txt").touch()
 
     build_data = builder.get_default_build_data()
@@ -396,7 +430,9 @@ def test_ZippedDirectoryBuilder_build_data_includes_readme(project_root, builder
     }
 
 
-def test_ZippedDirectoryBuilder_build_data_includes_license(project_root, builder):
+def test_ZippedDirectoryBuilder_build_data_includes_license(
+    project_root: Path, builder: ZippedDirectoryBuilder
+) -> None:
     project_root.joinpath("COPYING").touch()
 
     build_data = builder.get_default_build_data()
