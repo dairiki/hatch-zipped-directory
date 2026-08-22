@@ -46,6 +46,7 @@ readme = "README.md"
 install-name = "org.example.test"
 only-include = ["src"]
 sources = ["src"]
+core-metadata-version = "2.5"  # pin to prevent future test breakage
 """
 
 
