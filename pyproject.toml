@@ -41,9 +41,12 @@ dev = [
     {include-group = "lint"},
 ]
 test = [
-    "coverage>=7.15.4",
+    {include-group = "cover"},
     "hatch>=1.18.0",            # required by test_functional.py
     "pytest>=9.1.1",
+]
+cover = [
+    "coverage>=7.15.4",
 ]
 lint = [
     "mypy>=2.3.1",
@@ -65,32 +68,6 @@ include = [
     "/CHANGES.md",
     "/README.md",
 ]
-
-[tool.hatch.envs.default]
-dependency-groups = ["test"]
-[tool.hatch.envs.default.scripts]
-full = [
-    "pip freeze | paste -sd , -",
-    "coverage run -m pytest {args}",
-]
-cover = [
-    "hatch run test:full",
-    "hatch run coverage combine",
-    "hatch run coverage report --fail-under 100 --show-missing",
-]
-
-[tool.hatch.envs.dev]
-dependency-groups = ["test", "lint"]
-[tool.hatch.envs.dev.scripts]
-lint = [
-    "ruff check {args:.}",
-    "mypy {args:hatch_zipped_directory}",
-]
-
-[tool.hatch.envs.test]
-extra-dependencies = []
-[[tool.hatch.envs.test.matrix]]
-python = ["310", "311", "312", "313", "314", "315"]
 
 [tool.coverage.run]
 branch = true

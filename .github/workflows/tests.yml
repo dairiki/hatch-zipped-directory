@@ -21,23 +21,19 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest]
-        python-version: ['3.10', '3.11', '3.12', '3.13', '3.14', '3.15-dev']
+        python-version: ['3.10', '3.11', '3.12', '3.13', '3.14', '3.15']
     steps:
     - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
-      id: setup-python
+    - name: Install uv (with python ${{ matrix.python-version }})
+      uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
       with:
+        version: 0.12.5
         python-version: ${{ matrix.python-version }}
-        allow-prereleases: true
 
-    - name: Install hatch
-      run: python -m pip install hatch
+    - run: uv sync --locked --no-dev --group=test
 
-    - run: hatch run full
-      env:
-        HATCH_PYTHON: ${{ steps.setup-python.outputs.python-path }}
+    - run: uv run --no-sync coverage run -m pytest tests -ra
 
     - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
       with:
@@ -55,17 +51,21 @@ jobs:
     steps:
     - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-    - name: Install hatch
-      run: python -m pip install hatch
+    - name: Install uv
+      uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+      with:
+        version: 0.12.5
 
     - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
       with:
           pattern: coverage-*
           merge-multiple: true
 
-    - run: hatch run coverage combine
+    - run: uv sync --locked --only-group=cover
 
-    - run: hatch run coverage report --fail-under 100 --show-missing
+    - run: uv run --no-sync coverage combine
+
+    - run: uv run --no-sync coverage report --fail-under 100 --show-missing
 
   lint:
     name: Lint
@@ -75,8 +75,10 @@ jobs:
     steps:
     - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-    - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+    - name: Install uv
+      uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
       with:
+        version: 0.12.5
         python-version: ${{ env.python-version }}
 
     - name: pre-commit cache
@@ -85,16 +87,10 @@ jobs:
         path: ~/.cache/pre-commit
         key: py-${{ env.python-version }}-${{ hashFiles('.pre-commit-config.yaml') }}
 
-    - name: Install hatch
-      run: python -m pip install hatch
-
-    - name: Install pre-commit
-      run: python -m pip install pre-commit
-
     - name: Run mypy
-      run: hatch run dev:mypy hatch_zipped_directory
+      run: uv run mypy
 
-    - run: pre-commit run -a
+    - run: uv tool run prek run -a
       if: always()
 
   build:
@@ -108,9 +104,12 @@ jobs:
         with:
           fetch-depth: 0
 
-      - run: python -m pip install hatch packaging
+      - name: Install uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+        with:
+          version: 0.12.5
 
-      - run: hatch build
+      - run: uv build
 
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
@@ -121,17 +120,21 @@ jobs:
       - name: Classify Version
         id: classify-version
         run: |
-          hatch version | python -c '
-          import sys, packaging.version
-          version = packaging.version.parse(sys.stdin.read())
-          if version.local:
-              version_type = "local"
-          elif version.is_devrelease:
-              version_type = "dev"
-          elif version.is_prerelease:
-              version_type = "pre"
-          else:
-              version_type = "release"
+          uv run python -c '
+          import sys
+          from importlib import metadata
+          from packaging.version import parse as parse_version, Version
+
+          version = metadata.version("hatch_zipped_directory")
+          match parse_version(version):
+              case Version(pre=None, dev=None, local=None):
+                  version_type = "release"
+              case Version(dev=None, local=None):
+                  version_type = "pre"
+              case Version(local=None):
+                  version_type = "dev"
+              case _:
+                  version_type = "local"
           print(f"version-type={version_type}")
-          print(f"version-type={version_type}", file=sys.stderr)
+          print(f"version-type={version_type}, version={version}", file=sys.stderr)
           ' >> "$GITHUB_OUTPUT"
