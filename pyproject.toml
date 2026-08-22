@@ -35,6 +35,22 @@ Homepage = "https://github.com/dairiki/hatch-zipped-directory"
 [project.entry-points.hatch]
 zipped-directory = "hatch_zipped_directory.hooks"
 
+[dependency-groups]
+dev = [
+    {include-group = "test"},
+    {include-group = "lint"},
+    "poethepoet>=0.48.0",
+]
+test = [
+    "coverage>=7.15.4",
+    "hatch>=1.18.0",            # required by test_functional.py
+    "pytest>=9.1.1",
+]
+lint = [
+    "mypy>=2.3.1",
+    "ruff>=0.16.4",
+]
+
 [build-system]
 requires = ["hatchling", "hatch-vcs"]
 build-backend = "hatchling.build"
@@ -53,11 +69,7 @@ include = [
 ]
 
 [tool.hatch.envs.default]
-dependencies = [
-  "pytest",
-  "coverage",
-  "hatch",  # required by test_functional.py
-]
+dependency-groups = ["test"]
 [tool.hatch.envs.default.scripts]
 full = [
     "pip freeze | paste -sd , -",
@@ -70,10 +82,7 @@ cover = [
 ]
 
 [tool.hatch.envs.dev]
-extra-dependencies = [
-  "ruff",
-  "mypy",
-]
+dependency-groups = ["test", "lint"]
 [tool.hatch.envs.dev.scripts]
 lint = [
     "ruff check {args:.}",
