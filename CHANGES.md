@@ -2,22 +2,25 @@
 
 ## 0.3.0 (unreleased)
 
-Drop support for python 3.9, test under python 3.15.
+Drop support for python 3.9, test under python 3.15. ([#9])
 
 ### Bugs Fixed
 
 - When running in reproducible mode (the default), force the "create system"
   flag to "unix" in the zip archive file headers, in order to create bit-wise
-  identical results regardless of OS. Fixes [#7].
+  identical results regardless of OS. ([#10], [#7])
 
 ### Tests Fixed
 
 - Fix the functional test for `hatchling` == 1.32 which changes to
   emitting core metadata version 2.5.  This results in a change to the
   generated `METADATA.json`, and so a change to the SHA of the
-  generated zip archive.
+  generated zip archive. ([#8])
 
 [#7]: https://github.com/dairiki/hatch-zipped-directory/issues/7
+[#8]: https://github.com/dairiki/hatch-zipped-directory/pull/8
+[#9]: https://github.com/dairiki/hatch-zipped-directory/pull/9
+[#10]: https://github.com/dairiki/hatch-zipped-directory/pull/10
 
 ## 0.2.1 (2025-06-06)
 
