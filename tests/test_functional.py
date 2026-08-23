@@ -10,7 +10,9 @@ import pytest
 
 
 @pytest.fixture(scope="session")
-def plugin_uri(tmp_path_factory, pytestconfig):
+def plugin_uri(
+    tmp_path_factory: pytest.TempPathFactory, pytestconfig: pytest.Config
+) -> str:
     """Generate URI to a temporary copy of our source code.
 
     To ensure that ``hatch build`` is run with a current copy of our
@@ -18,7 +20,7 @@ def plugin_uri(tmp_path_factory, pytestconfig):
     hatch's wheel cache.
 
     """
-    project_path = Path(pytestconfig.rootdir)
+    project_path = pytestconfig.rootpath
     plugin_path = tmp_path_factory.mktemp("plugin")
     shutil.copytree(
         project_path,
@@ -51,7 +53,7 @@ core-metadata-version = "2.5"  # pin to prevent future test breakage
 
 
 @pytest.fixture
-def demo_path(tmp_path, plugin_uri):
+def demo_path(tmp_path: Path, plugin_uri: str) -> Path:
     project_path = tmp_path / "demo-project"
     project_path.mkdir()
 
@@ -76,7 +78,7 @@ def demo_path(tmp_path, plugin_uri):
 
 
 @pytest.fixture
-def demo_zipfile_path(demo_path):
+def demo_zipfile_path(demo_path: Path) -> Path:
     subprocess.run(
         [sys.executable, "-m", "hatch", "build", "--target", "zipped-directory"],
         cwd=demo_path,
@@ -90,7 +92,7 @@ def demo_zipfile_path(demo_path):
     return demo_path / "dist/demo-0.42.zip"
 
 
-def test_build_demo(demo_zipfile_path):
+def test_build_demo(demo_zipfile_path: Path) -> None:
     with ZipFile(demo_zipfile_path) as zf:
         assert set(zf.namelist()) == {
             # from src/
@@ -107,7 +109,7 @@ def test_build_demo(demo_zipfile_path):
         }
 
 
-def test_demo_zipfile_hash(demo_zipfile_path):
+def test_demo_zipfile_hash(demo_zipfile_path: Path) -> None:
     with open(demo_zipfile_path, "rb") as fp:
         zip_sha1 = hashlib.sha1(fp.read()).hexdigest()
     assert zip_sha1 == "8a54ccba3119e8700a121a872c40e934e883783f"

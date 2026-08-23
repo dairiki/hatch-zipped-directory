@@ -1,9 +1,10 @@
 # hatch-zipped-directory
 
-[![PyPI - Version](https://img.shields.io/pypi/v/hatch-zipped-directory.svg)](https://pypi.org/project/hatch-zipped-directory)
-[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/hatch-zipped-directory.svg)](https://pypi.org/project/hatch-zipped-directory)
-[![Tests](https://github.com/dairiki/hatch-zipped-directory/actions/workflows/tests.yml/badge.svg)](https://github.com/dairiki/hatch-zipped-directory/actions/workflows/tests.yml)
-[![Trackgit Views](https://us-central1-trackgit-analytics.cloudfunctions.net/token/ping/lhautvz4zffrt8jawcpl)](https://trackgit.com)
+[![PyPI - Version](https://img.shields.io/pypi/v/hatch-zipped-directory.svg?logo=pypi&style=plastic "Latest PyPI version")](https://pypi.org/project/hatch-zipped-directory)
+![PyPI - Python Version](https://img.shields.io/pypi/pyversions/hatch-zipped-directory.svg?style=plastic "PyPI - Supported Python Versions")
+[![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/dairiki/hatch-zipped-directory/tests.yml?style=plastic&label=tests)](https://github.com/dairiki/hatch-zipped-directory/actions/workflows/tests.yml)
+[![GitHub stars](https://img.shields.io/github/stars/dairiki/hatch-zipped-directory?logo=github&style=plastic)](https://github.com/dairiki/hatch-zipped-directory)
+
 
 -----
 
@@ -109,6 +110,12 @@ Reproducible builds may be disabled by setting `reproducible = false`
 in an appropriate section of `pyproject.toml` or `hatch.toml`.  See
 Hatch’s documentation on [Build Configuration] for details.
 
+## Change History
+
+A [change log][CHANGES.md] is maintained in our [GitHub repository][repo].
+
+[CHANGES.md]: https://github.com/dairiki/hatch-zipped-directory/blob/master/CHANGES.md (CHANGES.md in the GitHub master branch)
+[repo]: https://github.com/dairiki/hatch-zipped-directory
 
 ## Author
 

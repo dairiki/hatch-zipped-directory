@@ -1,6 +1,7 @@
 [project]
 name = "hatch-zipped-directory"
 description = 'A custom builder to build zipped directories'
+readme = "README.md"
 requires-python = ">=3.10"
 license = "MIT"
 keywords = ["hatch", "packaging"]
@@ -27,64 +28,46 @@ classifiers = [
 dependencies = [
     "hatchling",
 ]
-dynamic = ["version", "readme"]
+dynamic = ["version"]
 
 [project.urls]
-Homepage = "https://github.com/dairiki/hatch-zipped-directory"
+Source = "https://github.com/dairiki/hatch-zipped-directory"
+Changes = "https://github.com/dairiki/hatch-zipped-directory/blob/master/CHANGES.md"
 
 [project.entry-points.hatch]
 zipped-directory = "hatch_zipped_directory.hooks"
+
+[dependency-groups]
+dev = [
+    {include-group = "test"},
+    {include-group = "lint"},
+]
+test = [
+    {include-group = "cover"},
+    "hatch>=1.18.0",            # required by test_functional.py
+    "pytest>=9.1.1",
+]
+cover = [
+    "coverage>=7.15.4",
+]
+lint = [
+    "mypy>=2.3.1",
+    "ruff>=0.16.4",
+]
 
 [build-system]
 requires = ["hatchling", "hatch-vcs"]
 build-backend = "hatchling.build"
 
-[tool.hatch.metadata.hooks.custom]
-# Custom hook in hatch_build.py concatenates README and CHANGES
 [tool.hatch.version]
 source = "vcs"
 [tool.hatch.build.targets.sdist]
 include = [
     "/hatch_zipped_directory",
     "/tests",
-    "/.flake8",
     "/CHANGES.md",
     "/README.md",
 ]
-
-[tool.hatch.envs.default]
-dependencies = [
-  "pytest",
-  "coverage",
-  "hatch",  # required by test_functional.py
-]
-[tool.hatch.envs.default.scripts]
-full = [
-    "pip freeze | paste -sd , -",
-    "coverage run -m pytest {args}",
-]
-cover = [
-    "hatch run test:full",
-    "hatch run coverage combine",
-    "hatch run coverage report --fail-under 100 --show-missing",
-]
-
-[tool.hatch.envs.dev]
-extra-dependencies = [
-  "flake8",
-  "flake8-bugbear",
-  "mypy",
-]
-[tool.hatch.envs.dev.scripts]
-lint = [
-    "flake8 {args:.}",
-    "mypy {args:hatch_zipped_directory}",
-]
-
-[tool.hatch.envs.test]
-extra-dependencies = []
-[[tool.hatch.envs.test.matrix]]
-python = ["310", "311", "312", "313", "314", "315"]
 
 [tool.coverage.run]
 branch = true
@@ -107,3 +90,14 @@ exclude_lines = [
   "if __name__ == .__main__.:",
   "if TYPE_CHECKING:",
 ]
+
+[tool.ruff]
+[tool.ruff.lint]
+extend-select = [
+  "UP",
+  "FURB",
+]
+
+[tool.mypy]
+files = ["hatch_zipped_directory/**.py", "tests/**.py"]
+strict = true

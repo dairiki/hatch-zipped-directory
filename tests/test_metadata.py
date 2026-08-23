@@ -4,7 +4,6 @@ import pytest
 
 from hatch_zipped_directory.metadata import metadata_to_json
 
-
 REQUIRED_METADATA = (
     inspect.cleandoc(
         """
