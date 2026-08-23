@@ -1,6 +1,6 @@
 # Changes
 
-## 0.3.0 (unreleased)
+## 0.3.0 (2026-08-22)
 
 Drop support for python 3.9, test under python 3.15. ([#9])
 
